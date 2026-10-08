@@ -1,0 +1,3 @@
+# Small profile for tests and quick iteration. Overlay on sim_reference.yaml.
+population:
+  n_accounts: 300

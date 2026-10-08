@@ -1,0 +1,99 @@
+# Reference simulator configuration.
+# All values are illustrative defaults chosen to produce heterogeneous, noisy trajectories for methodology evaluation.
+# They are not estimates of any real population.
+
+# Latent traits are on a sandardized scale: 0 = population-typical,
+# +/- 1 = one standard deviation above/below.
+
+seed: 20240101
+
+calendar:
+  start: 2024-01-01
+  end: 2026-07-01           # 30 months
+
+population:
+  n_accounts: 2000
+  tenant_id: demo
+  initial_fraction: 0.5     # share created during the initial window (established population)
+  initial_window_days: 90
+  arrivals_end: 2026-01-01  # later arrivals keep >= 6 months of history before calendar end
+
+latents:
+  - baseline_engagement
+  - scheduling_friction
+  - responsiveness
+  - service_satisfaction    # initial level; dynamics added in the event-generation step
+  - disruption_proneness
+  - persistence
+
+archetypes:
+  stable_high:
+    weight: 0.25
+    sd: 0.5
+    means:
+      baseline_engagement: 1.0
+      scheduling_friction: -0.5
+      responsiveness: 0.8
+      service_satisfaction: 0.8
+      disruption_proneness: -0.5
+      persistence: 0.8
+  sparse_stable:
+    weight: 0.15
+    sd: 0.5
+    means:
+      baseline_engagement: -0.8
+      scheduling_friction: 0.0
+      responsiveness: 0.3
+      service_satisfaction: 0.5
+      disruption_proneness: -0.5
+      persistence: 0.6
+  gradual_decline:
+    weight: 0.15
+    sd: 0.5
+    means:
+      baseline_engagement: 0.3
+      scheduling_friction: 0.3
+      responsiveness: 0.0
+      service_satisfaction: 0.0
+      disruption_proneness: 0.0
+      persistence: -0.3
+  disruption_recovery:
+    weight: 0.12
+    sd: 0.5
+    means:
+      baseline_engagement: 0.5
+      scheduling_friction: 0.0
+      responsiveness: 0.3
+      service_satisfaction: 0.3
+      disruption_proneness: 1.2
+      persistence: 1.0
+  disruption_lapse:
+    weight: 0.10
+    sd: 0.5
+    means:
+      baseline_engagement: 0.2
+      scheduling_friction: 0.3
+      responsiveness: -0.2
+      service_satisfaction: 0.0
+      disruption_proneness: 1.2
+      persistence: -1.0
+  chronic_low:
+    weight: 0.13
+    sd: 0.5
+    means:
+      baseline_engagement: -1.0
+      scheduling_friction: 0.8
+      responsiveness: -0.8
+      service_satisfaction: -0.5
+      disruption_proneness: 0.3
+      persistence: -0.8
+  false_alarm:
+    weight: 0.10
+    sd: 0.5
+    means:
+      baseline_engagement: 0.6
+      scheduling_friction: 0.4
+      responsiveness: 0.2
+      service_satisfaction: 0.4
+      disruption_proneness: 0.3
+      persistence: 0.5

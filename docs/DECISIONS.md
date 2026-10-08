@@ -151,3 +151,32 @@ other deployments define their own.
 - Evidence: Step 1 test run (misspelled column passed to_arrow; zoneinfo lookup failed on
   Windows); regression test test_nulls_in_required_columns_are_rejected.
 - Consequence: malformed tables fail at the boundary that produced them, on every platform.
+
+## Step 2 implementation decisions
+
+### D-017 Layered, validated configuration with fingerprints [ACTIVE]
+- Observation: simulator, target, and model parameters must be swappable without code
+  changes, and every output must be traceable to the exact parameters that produced it.
+- Decision: YAML layers deep-merged in order (mappings merge; lists and scalars are
+  replaced), validated by frozen Pydantic models with unknown keys rejected. A config
+  fingerprint (sha256 of canonical JSON, 16 hex chars) is written into Parquet metadata
+  and a run manifest.
+- Alternatives: CLI flags only (unwieldy for nested parameters); Python modules as config
+  (couples parameters to code); full copies per profile (duplication, drift).
+- Evidence: tests/test_core_config.py, tests/test_sim_config.py.
+- Consequence: a new benchmark or profile is a new YAML layer; typos fail at load time.
+
+### D-018 Population model [ACTIVE]
+- Decision: latent traits and archetypes are declared in configuration. Latents use a
+  standardized scale (0 = population-typical, units of one SD) with per-archetype normal
+  priors and a shared per-archetype SD. Archetype mixture weights are normalized. Arrivals:
+  an established population created during an initial window, plus uniform later arrivals
+  until arrivals_end. Archetype, arrival, and latents use separate random streams per
+  account index. Truth-table latent columns carry the prefix `latent_`.
+- Alternatives: Beta-distributed traits on [0,1] (awkward in additive linear predictors);
+  explicit latent covariance (not needed; archetype means already induce correlation).
+- Evidence: tests/test_population.py (determinism, size invariance, stream isolation,
+  mixture and prior recovery).
+- Consequence: archetypes defined mainly by dynamics (gradual_decline, false_alarm,
+  disruption_*) differ only weakly in static traits until time-varying state is added in
+  the event-generation step.

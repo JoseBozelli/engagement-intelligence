@@ -8,8 +8,10 @@ from __future__ import annotations
 import json
 from collections.abc import Iterable, Mapping
 from typing import TypeVar
+from pathlib import Path
 
 import pyarrow as pa
+import pyarrow.parquet as pq
 
 from engagement_intelligence.core.envelope import EventEnvelope
 
@@ -57,8 +59,9 @@ def to_arrow(events: Iterable[EventEnvelope]) -> pa.Table:
     check_schema(table)
     return table
 
-def check_schema(table: pa.Table) -> None:
-    for field in EVENT_ARROW_SCHEMA:
+def check_table(table: pa.Table, schema: pa.Schema) -> None:
+    """Column presence, types, and non-nullability (pyarrow does not enforce the latter)."""
+    for field in schema:
         if field.name not in table.schema.names:
             raise ValueError(f"missing column: {field.name}")
         actual = table.schema.field(field.name).type
@@ -66,6 +69,9 @@ def check_schema(table: pa.Table) -> None:
             raise ValueError(f"column {field.name}: expected {field.type}, got {actual}")
         if not field.nullable and table.column(field.name).null_count:
             raise ValueError(f"column {field.name}: nulls in non-nullable column")
+
+def check_schema(table: pa.Table) -> None:
+    check_table(table, EVENT_ARROW_SCHEMA)
 
 def from_arrow(table: pa.Table, model: type[E] = EventEnvelope) -> list[E]:
     """Boundary validation: materialize every row through `model`."""
@@ -75,3 +81,22 @@ def from_arrow(table: pa.Table, model: type[E] = EventEnvelope) -> list[E]:
         attributes = json.loads(row.pop("attributes_json"))
         out.append(model(**row, attributes=attributes))
     return out
+
+def write_parquet(table: pa.Table, path: str | Path, metadata: Mapping[str, str] | None = None) -> None:
+    """Write a table, attaching provenance metadata (e.g., a config fingerprint)."""
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    if metadata:
+        existing = table.schema.metadata or {}
+        added = {k.encode(): v.encode() for k, v in metadata.items()}
+        table = table.replace_schema_metadata({**existing, **added})
+    pq.write_table(table, path)
+
+def read_parquet_metadata(path: str | Path) -> dict[str, str]:
+    """User metadata only; library-internal keys are excluded."""
+    raw = pq.read_schema(path).metadata or {}
+    return {
+        k.decode(): v.decode()
+        for k, v in raw.items()
+        if not k.startswith(b"ARROW:") and k != b"pandas"
+    }

@@ -309,3 +309,20 @@ other deployments define their own.
 - Evidence: tests/test_diagnostics.py.
 - Consequence: a report always describes one identifiable run; no silent mixing.
 
+## Day 1 checkpoint (2026-10-09)
+
+### D-030 Day-1 outcome and simulator freeze [LOCKED]
+- Observation: all Day-1 stop criteria pass on the reference run (reports/day1_checkpoint.md):
+  overall prevalence 0.107; recency heuristic ROC-AUC about 0.82 on every split; labels are
+  informative (P(latent+ | label) = 0.85) and measurably noisy (P(label | latent+) = 0.60;
+  false lapses concentrated in low-activity accounts); measured noise matches configuration.
+- Decision: the simulator is frozen for model development. Any later change requires a
+  logged Question/Hypothesis/Experiment/Result/Decision entry and a regenerated report.
+  Temporal prevalence drift and lower cold-start prevalence are retained as mechanism-
+  consistent characteristics (D-007).
+- Consequences for model development: (1) models are judged against the recency baseline,
+  not only against chance; (2) PR-AUC and calibration carry model selection at ~11%
+  prevalence; (3) calibration is evaluated per split because drift is expected;
+  (4) error analysis covers archetype, cold-start, and account tenure.
+
+  

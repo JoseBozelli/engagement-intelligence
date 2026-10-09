@@ -452,3 +452,24 @@ other deployments define their own.
   bootstrap uncertainty: the loss surface is flat.
 - Decision: model experimentation stops (brief section 15 conditions met). Selection
   logistic[no_policy] stands.
+
+## Step 10 implementation decisions
+
+### D-040 Self-describing model bundle [LOCKED]
+- Decision: a bundle directory holds model.joblib and bundle.json. The manifest carries the
+  target (eligibility rule), roles, feature spec, model features (with any policy-dependent
+  ones listed), model kind and parameters, calibration, operating point and operating config,
+  training window, validation summary, and provenance fingerprints. The model version is
+  derived from manifest content (same inputs, same version). Loading verifies the estimator's
+  SHA-256. The bundled model is the train-only fit for which calibration and thresholds were
+  derived; refitting on train+validation is deferred because it would invalidate them.
+- Consequence: a scorer needs only a bundle and raw events; this is the integration contract
+  for the scoring service and for downstream reuse. Joblib loading executes code, so bundles
+  are loaded only from trusted locations.
+
+### D-041 One-time held-out evaluation [LOCKED]
+- Decision: the test split is evaluated once by evaluate_cli: selected model vs recency
+  baseline (paired account-clustered bootstrap), calibration under temporal drift, the
+  validation-derived operating point applied unchanged, and observable slices. A repeat run
+  requires --rerun-reason, and every run is kept in the record with its reason.
+- Consequence: "test touched once" is enforced by code; any rerun is visible in history.

@@ -57,6 +57,8 @@ archetypes:
       service_satisfaction: 0.0
       disruption_proneness: 0.0
       persistence: -0.3
+    dynamics:
+      satisfaction_drift_per_year: -1.0
   disruption_recovery:
     weight: 0.12
     sd: 0.5
@@ -97,3 +99,37 @@ archetypes:
       service_satisfaction: 0.4
       disruption_proneness: 0.3
       persistence: 0.5
+    dynamics:
+      dip_rate_per_year: 1.5
+      dip_mean_duration_days: 21
+
+# Time-varying dynamics. Probabilities are daily; predictors marked "logit" are on the log-odds scale.
+# State variables to pathways: satisfaction, disrupted (0/1), and propensity (disengagement pathways only).
+dynamics:
+  satisfaction:
+    anchor_latent: service_satisfaction
+    reversion: 0.02             # daily pull toward the (possibly drifting) anchor
+    noise_sd: 0.05              # daily innovation; stationary SD ~= 0.05 / sqrt(2 * 0.02) = 0.25
+  disruption:
+    onset:                      # logit: a disruption starts today
+      intercept: -6.5
+      coefficients:
+        disruption_proneness: 0.8
+    mean_duration_days: 30
+  propensity:                   # engagement propensity E(t), identity link
+    intercept: 0.0
+    coefficients:
+      baseline_engagement: 0.6
+      scheduling_friction: -0.2
+      satisfaction: 0.5
+      disrupted: -1.5
+  disengagement:
+    hazard:                     # logit: an engaged account disengages today
+      intercept: -7.0
+      coefficients:
+        propensity: -1.2
+        persistence: -0.5
+    recovery:                   # logit: a disengaged account re-engages today
+      intercept: -6.5
+      coefficients:
+        persistence: 0.6

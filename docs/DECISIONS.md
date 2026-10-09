@@ -180,3 +180,30 @@ other deployments define their own.
 - Consequence: archetypes defined mainly by dynamics (gradual_decline, false_alarm,
   disruption_*) differ only weakly in static traits until time-varying state is added in
   the event-generation step.
+
+## Step 3 design (approved 2026-10-08)
+
+### D-019 Daily latent dynamics [LOCKED]
+- Decision: daily discrete-time simulation per account from creation to calendar end.
+  State: satisfaction (mean-reverting toward a latent anchor with optional per-archetype
+  drift, daily noise, and externally supplied experience shocks); disruption episodes
+  (daily onset logit from latents, geometric duration); dip episodes (per-archetype rate
+  and duration; affect observable activity only, never the hazard); engagement propensity
+  E(t) (linear in latents and state); disengaged (escapable state with daily hazard and
+  recovery logits). Every coefficient is configuration; the state variables a pathway may
+  reference are fixed by the mechanics and validated. Implemented as a stepper so the event
+  generator can drive it day by day and feed back shocks. Work is split into dynamics (3a),
+  observable events with an observables-only operator policy (3b), and observation noise (3c).
+- Alternatives: continuous-time event simulation (exact but harder to read and test);
+  trajectories computed independently of events (no experience feedback).
+- Evidence: tests/test_dynamics.py.
+- Consequence: about 1.4M account-days at the reference size; pure-Python loop runtime of
+  tens of seconds, accepted to preserve per-account stream determinism (D-011).
+
+### D-020 Stable account index and per-process random columns [ACTIVE]
+- Decision: the account truth table stores account_index, which keys every downstream
+  random stream (rather than row position). Within the dynamics stream, random numbers are
+  pre-drawn with one column per process.
+- Evidence: test_disengagement_parameters_do_not_perturb_other_processes.
+- Consequence: filtering or reordering accounts, or changing one process's parameters,
+  cannot alter another account's or another process's trajectory.

@@ -28,6 +28,7 @@ def account_schema(cfg: SimConfig) -> pa.Schema:
     return pa.schema(
         [
             pa.field("account_id", pa.string(), nullable=False),
+            pa.field("account_index", pa.int32(), nullable=False),
             pa.field("tenant_id", pa.string(), nullable=False),
             pa.field("archetype", pa.string(), nullable=False),
             pa.field("created_at", pa.timestamp("us", tz="UTC"), nullable=False),
@@ -62,6 +63,7 @@ def sample_population(cfg: SimConfig) -> pa.Table:
 
         row = {
             "account_id": make_account_id(i),
+            "account_index": i,
             "tenant_id": cfg.population.tenant_id,
             "archetype": archetype,
             "created_at": created_at,

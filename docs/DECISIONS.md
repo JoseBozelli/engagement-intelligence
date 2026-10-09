@@ -296,3 +296,16 @@ other deployments define their own.
 - Evidence: test_labels_do_not_depend_on_simulation; split-rule property test on simulated data.
 - Consequence: a different deployment reuses build_assessments with its own target,
   vocabulary, and dates; no code changes.
+
+## Step 5 implementation decisions
+
+### D-029 Day-1 diagnostics are evaluation-only and provenance-checked [ACTIVE]
+- Decision: the checkpoint report lives in the simulation package because it reads truth;
+  the labels package stays truth-free. It reuses the labeling module's point-in-time
+  primitives (latest known engagement, next occurrence), so the heuristic diagnostic uses
+  exactly the label logic's leakage controls. It refuses to run unless the assessments'
+  stamped fingerprints match the simulation manifest and labeling config. The rendered
+  report is committed under reports/ as evidence.
+- Evidence: tests/test_diagnostics.py.
+- Consequence: a report always describes one identifiable run; no silent mixing.
+

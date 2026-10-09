@@ -11,6 +11,7 @@ duplicates are removed by event_id first (D-009).
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from datetime import date, datetime, timedelta, timezone
 
 import numpy as np
@@ -29,7 +30,7 @@ ASSESSMENT_SCHEMA = pa.schema(
     ]
 )
 
-_DAY_US = 86_400 * 10**6
+DAY_US = 86_400 * 10**6
 _I64_MIN, _I64_MAX = np.iinfo(np.int64).min, np.iinfo(np.int64).max
 
 
@@ -43,7 +44,8 @@ def _us(value: datetime | date) -> int:
     return int(np.datetime64(value, "D").astype("datetime64[us]").astype(np.int64))
 
 
-def _column_us(table: pa.Table, name: str) -> np.ndarray:
+def column_us(table: pa.Table, name: str) -> np.ndarray:
+    """A timestamp column as int64 microseconds since epoch (UTC)."""
     return table.column(name).to_numpy().astype("datetime64[us]").astype(np.int64)
 
 
@@ -55,10 +57,45 @@ def assessment_grid(target: TargetSpec, start: date, end: date) -> np.ndarray:
     return days.astype("datetime64[us]").astype(np.int64)
 
 
+def latest_known(occurred: np.ndarray, recorded: np.ndarray, times: np.ndarray) -> np.ndarray:
+    """Latest occurrence time among events recorded at or before each time (int64 min if none)."""
+    by_recorded = np.argsort(recorded, kind="stable")
+    latest = np.maximum.accumulate(occurred[by_recorded])
+    pos = np.searchsorted(recorded[by_recorded], times, side="right")
+    return np.where(pos > 0, latest[np.maximum(pos - 1, 0)], _I64_MIN)
+
+
+def next_occurrence(occurred: np.ndarray, times: np.ndarray) -> np.ndarray:
+    """First occurrence strictly after each time (int64 max if none). `occurred` must be sorted."""
+    nxt = np.searchsorted(occurred, times, side="right")
+    return np.where(nxt < len(occurred), occurred[np.minimum(nxt, len(occurred) - 1)], _I64_MAX)
+
+
+def _engagement_blocks(target: TargetSpec, events: pa.Table) -> Iterator[tuple[str, np.ndarray, np.ndarray]]:
+    """Per account: (account_id, occurred ascending, recorded aligned). Expects deduplicated events."""
+    accounts = np.array(events.column("account_id").to_pylist())
+    occurred = column_us(events, "timestamp")
+    recorded = column_us(events, "recorded_at")
+    selectors = {(s.event_type, s.actor) for s in target.engagement_events}
+    pairs = zip(events.column("event_type").to_pylist(), events.column("actor").to_pylist())
+    mask = np.fromiter((p in selectors for p in pairs), dtype=bool, count=events.num_rows)
+    idx = np.flatnonzero(mask)
+    order = idx[np.lexsort((occurred[idx], accounts[idx]))]
+    unique, starts, counts = np.unique(accounts[order], return_index=True, return_counts=True)
+    for account, start, k in zip(unique, starts, counts):
+        block = order[start:start + k]
+        yield str(account), occurred[block], recorded[block]
+
+
+def engagement_blocks(target: TargetSpec, events: pa.Table) -> Iterator[tuple[str, np.ndarray, np.ndarray]]:
+    """Per-account engagement event times, after exact deduplication (D-009)."""
+    return _engagement_blocks(target, deduplicate_events(events))
+
+
 def _grid_with_splits(cfg: LabelingConfig, as_of_us: int) -> tuple[np.ndarray, np.ndarray]:
     target, windows = cfg.target, cfg.splits.windows
-    horizon = target.horizon_days * _DAY_US
-    settle = target.label_settlement_days * _DAY_US
+    horizon = target.horizon_days * DAY_US
+    settle = target.label_settlement_days * DAY_US
     grids, names = [], []
     for i, w in enumerate(windows):
         g = assessment_grid(target, w.start, w.end)
@@ -78,40 +115,17 @@ def _first_seen(accounts: np.ndarray, timestamps: np.ndarray) -> dict[str, int]:
 def build_assessments(cfg: LabelingConfig, events: pa.Table, as_of: datetime) -> pa.Table:
     target, plan = cfg.target, cfg.splits
     events = deduplicate_events(events)
-    accounts = np.array(events.column("account_id").to_pylist())
-    timestamps = _column_us(events, "timestamp")
-    recorded = _column_us(events, "recorded_at")
-    first_seen = _first_seen(accounts, timestamps)
+    first_seen = _first_seen(np.array(events.column("account_id").to_pylist()), column_us(events, "timestamp"))
     grid, split_names = _grid_with_splits(cfg, _us(as_of))
-
-    selectors = {(s.event_type, s.actor) for s in target.engagement_events}
-    pairs = zip(events.column("event_type").to_pylist(), events.column("actor").to_pylist())
-    is_engagement = np.fromiter((p in selectors for p in pairs), dtype=bool, count=events.num_rows)
-
-    eng = np.flatnonzero(is_engagement)
-    order = eng[np.lexsort((timestamps[eng], accounts[eng]))]
-    unique, starts, counts = np.unique(accounts[order], return_index=True, return_counts=True)
-    window = target.eligibility_window_days * _DAY_US
-    horizon = target.horizon_days * _DAY_US
+    window = target.eligibility_window_days * DAY_US
+    horizon = target.horizon_days * DAY_US
 
     out_accounts, out_times, out_splits, out_labels = [], [], [], []
-    for account, start, k in zip(unique, starts, counts):
-        idx = order[start:start + k]
-        ts = timestamps[idx]                          # sorted by occurrence time
-        by_recorded = np.argsort(recorded[idx], kind="stable")
-        recorded_sorted = recorded[idx][by_recorded]
-        latest_known = np.maximum.accumulate(ts[by_recorded])
-
-        pos = np.searchsorted(recorded_sorted, grid, side="right")
-        last = np.where(pos > 0, latest_known[np.maximum(pos - 1, 0)], _I64_MIN)
-        eligible = last > grid - window
+    for account, occurred, recorded in _engagement_blocks(target, events):
+        eligible = latest_known(occurred, recorded, grid) > grid - window
         if not eligible.any():
             continue
-
-        nxt = np.searchsorted(ts, grid, side="right")
-        next_ts = np.where(nxt < k, ts[np.minimum(nxt, k - 1)], _I64_MAX)
-        lapse = ~(next_ts <= grid + horizon)
-
+        lapse = ~(next_occurrence(occurred, grid) <= grid + horizon)
         out_accounts.append(np.full(int(eligible.sum()), account, dtype=object))
         out_times.append(grid[eligible])
         out_splits.append(split_names[eligible])

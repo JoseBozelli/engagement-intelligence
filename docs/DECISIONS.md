@@ -271,3 +271,28 @@ other deployments define their own.
 - Evidence: tests/test_noise.py (rates, reconciliation, bounds, independence, determinism).
 - Consequence: features and models read only data/<run>/observable/; recording delay is
   the test bed for point-in-time leakage controls in the labeling step.
+
+## Step 4 implementation decisions
+
+### D-027 Point-in-time labeling semantics [ACTIVE; clarifies D-001]
+- Decision: at assessment t (00:00 UTC, weekly), an account is eligible iff its latest
+  engagement event *recorded by t* occurred in (t - W, t]. The label is True (lapse) iff no
+  engagement event *occurred* in (t, t + H] within the snapshot. Labels are final only
+  after a settlement period; rows with t + H + settlement > as_of are censored (dropped).
+  Exact duplicates are removed by event_id before labeling. Cold start = first observed
+  event after the configured split's end (observable data, not truth).
+- Rationale: eligibility must use only information available at t; the label must
+  describe what actually happened, so an engagement logged late still counts. D-001's
+  "recorded in (t, t+H]" wording is superseded by "occurred in (t, t+H]".
+- Evidence: tests/test_labels.py (delayed recording, occurrence-time labels, duplicates,
+  boundaries).
+
+### D-028 Labeling is a vocabulary-agnostic deployment component [ACTIVE]
+- Decision: the labels package depends only on core; the target is validated against any
+  EventVocabulary. Configuration separates the target (needed in production scoring) from
+  the split plan (model development only). Splits are date windows; a row is purged when
+  its label window reaches past the next window's start; the last window is only censored.
+  Outputs go to labels/, separate from observable/ (inputs) and truth/ (simulator only).
+- Evidence: test_labels_do_not_depend_on_simulation; split-rule property test on simulated data.
+- Consequence: a different deployment reuses build_assessments with its own target,
+  vocabulary, and dates; no code changes.

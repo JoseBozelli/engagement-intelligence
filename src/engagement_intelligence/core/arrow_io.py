@@ -13,6 +13,7 @@ from pathlib import Path
 import pyarrow as pa
 import pyarrow.parquet as pq
 import pyarrow.compute as pc
+import numpy as np
 
 from engagement_intelligence.core.envelope import EventEnvelope
 
@@ -103,3 +104,10 @@ def read_parquet_metadata(path: str | Path) -> dict[str, str]:
         for k, v in raw.items()
         if not k.startswith(b"ARROW:") and k != b"pandas"
     }
+
+def deduplicate_events(table: pa.Table) -> pa.Table:
+    """Remove exact duplicates by event_id, keeping the first occurrence in table order (D-009)."""
+    if table.num_rows == 0:
+        return table
+    _, first = np.unique(np.array(table.column("event_id").to_pylist()), return_index=True)
+    return table.take(pa.array(np.sort(first)))

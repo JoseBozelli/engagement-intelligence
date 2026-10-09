@@ -6,7 +6,7 @@ import pytest
 from pydantic import ValidationError
 
 from engagement_intelligence.core import ids
-from engagement_intelligence.core.arrow_io import EVENT_ARROW_SCHEMA, from_arrow, to_arrow, check_schema
+from engagement_intelligence.core.arrow_io import EVENT_ARROW_SCHEMA, from_arrow, to_arrow, check_schema, deduplicate_events
 from engagement_intelligence.schemas.events import (
     REFERENCE_VOCABULARY,
     SIGNALGUARD_COMPATIBLE_TYPES,
@@ -151,3 +151,9 @@ def test_reference_vocabulary_names_are_exact():
         "task.completed", "message.sent", "message.opened", "message.replied",
     }
     assert {str(a) for a in Actor} == {"account", "operator", "system"}
+
+def test_deduplicate_events_keeps_first_occurrence():
+    a = make_event()
+    b = make_event(event_id=ids.make_event_id(1, "acc_000001", 7))
+    deduped = deduplicate_events(to_arrow([a, b, a]))
+    assert deduped.column("event_id").to_pylist() == [a.event_id, b.event_id]

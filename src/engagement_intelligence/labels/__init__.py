@@ -1,0 +1,1 @@
+"""Point-in-time target construction. Vocabulary-agnostic; depends only on core."""

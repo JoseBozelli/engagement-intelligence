@@ -28,3 +28,15 @@ def test_core_does_not_import_downstream_modules():
         if mod.startswith(FORBIDDEN_PREFIXES)
     ]
     assert offenders == []
+
+def test_labels_do_not_depend_on_simulation():
+    import engagement_intelligence.labels as labels
+
+    labels_dir = Path(labels.__file__).parent
+    offenders = [
+        (p.name, mod)
+        for p in labels_dir.glob("*.py")
+        for mod in _imports(p)
+        if mod.startswith("engagement_intelligence.simulation")
+    ]
+    assert offenders == []

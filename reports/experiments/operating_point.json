@@ -1,0 +1,35 @@
+{
+  "selected_model": "logistic[no_policy]",
+  "calibration": {
+    "method": "none",
+    "slope": 1.0,
+    "intercept": 0.0
+  },
+  "operating_point": {
+    "high_threshold": 0.3765295592901669,
+    "medium_threshold": 0.13180671134548363,
+    "review_capacity": 0.1,
+    "watch_capacity": 0.25
+  },
+  "operating_config_fingerprint": "3af96ef0e1049b53",
+  "provenance": {
+    "modeling config fingerprint": "5399367fbd7ec9ce",
+    "feature spec fingerprint": "d177b052d82e477d",
+    "labeling config fingerprint": "64cfdf882d3bef12",
+    "source run fingerprint": "8918c959fdd5f9fa"
+  },
+  "validation_summary": {
+    "ece_raw": 0.008038917996031519,
+    "ece_after": 0.008038917996031519,
+    "calibration_slope_raw": 1.0204790411087008,
+    "calibration_intercept_raw": -0.0704378297743728,
+    "precision_high": 0.5515055467511886,
+    "recall_high": 0.4969062351261304,
+    "per_1000_weekly": {
+      "flagged": 100.01585037248375,
+      "lapses caught": 55.15929624346172,
+      "false alarms": 44.85655412902203,
+      "lapses missed": 55.8461457177577
+    }
+  }
+}

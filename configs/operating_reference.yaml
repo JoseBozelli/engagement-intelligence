@@ -1,0 +1,9 @@
+# Reference operating policy: illustrative demo values in business units (D-025).
+# review_capacity: share of eligible accounts a team can review per assessment week (HIGH band).
+# watch_capacity: share flagged HIGH or MEDIUM; MEDIUM covers the tier below HIGH.
+review_capacity: 0.10
+watch_capacity: 0.25
+ece_tolerance: 0.02          # recalibrate when validation ECE exceeds this
+calibration_bins: 10
+tenure_feature: tenure_days  # error analysis slices accounts by age using this feature
+tenure_buckets_days: [90, 180, 365]

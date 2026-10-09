@@ -424,3 +424,19 @@ other deployments define their own.
   the error analysis.
 - Provisional selection: logistic[no_policy] (simplest candidate not significantly worse
   than the best, xgboost[no_policy]; difference CI [-0.0017, 0.0071]).
+
+## Step 9 implementation decisions
+
+### D-038 Operating policy and model review [ACTIVE]
+- Decision: operating policy is separate business configuration (configs/operating_*.yaml):
+  review capacity (HIGH band = share of eligible accounts reviewable per week), watch capacity
+  (HIGH + MEDIUM share), ECE tolerance for recalibration, and error-analysis tenure buckets.
+  Band thresholds are validation score quantiles of the selected model after the calibration
+  decision; Platt recalibration applies only when validation ECE exceeds the tolerance.
+  Thresholds use observable predictions only; truth explains errors (archetype slices,
+  latent precision of flags) and never sets values. Consequences are reported per 1,000
+  eligible accounts per week. models/operating.py (calibration, thresholds, assign_bands)
+  and evaluation/slices.py are reusable; the truth-reading review harness lives in
+  simulation/ (as D-029). Output reports/experiments/operating_point.json feeds the bundle.
+- Consequence: thresholds are explicitly demo values derived from a stated capacity, so a
+  deployment changes behavior by changing capacity, not by editing probabilities.

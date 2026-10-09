@@ -4,7 +4,7 @@ Synthetic data for methodology evaluation only. Thresholds are demo values, not 
 
 - Selected model: `logistic[no_policy]`
 - Operating config fingerprint: `3af96ef0e1049b53`
-- modeling config fingerprint: `5399367fbd7ec9ce`
+- modeling config fingerprint: `0aef6dd85b1168bf`
 - feature spec fingerprint: `d177b052d82e477d`
 - labeling config fingerprint: `64cfdf882d3bef12`
 - source run fingerprint: `8918c959fdd5f9fa`

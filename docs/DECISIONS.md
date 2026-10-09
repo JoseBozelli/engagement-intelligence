@@ -440,3 +440,15 @@ other deployments define their own.
   simulation/ (as D-029). Output reports/experiments/operating_point.json feeds the bundle.
 - Consequence: thresholds are explicitly demo values derived from a stated capacity, so a
   deployment changes behavior by changing capacity, not by editing probabilities.
+
+### D-039 Lower-edge grid extension for XGBoost (amends the D-037 stop) [LOCKED]
+- Question: was xgboost[level_only]'s optimum (max_depth 3, min_child_weight 10), at the
+  lower grid corner, an artifact of the grid? Requested to make the "level_only vs all"
+  ablation reading fair; D-037's stop call amended to one extension per edge direction.
+- Experiment: max_depth {2, 3, 5, 7} x min_child_weight {3, 10, 50, 200}; all else unchanged.
+- Result: all optima interior and unchanged for every feature set; validation metrics,
+  paired readings, and selection identical to runs 1-2. Neighboring configurations differ
+  by 0.0001-0.0005 in CV log loss, at least an order of magnitude below the validation
+  bootstrap uncertainty: the loss surface is flat.
+- Decision: model experimentation stops (brief section 15 conditions met). Selection
+  logistic[no_policy] stands.

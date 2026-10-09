@@ -1,6 +1,6 @@
 {
   "provenance": {
-    "modeling config fingerprint": "5399367fbd7ec9ce",
+    "modeling config fingerprint": "0aef6dd85b1168bf",
     "feature spec fingerprint": "d177b052d82e477d",
     "labeling config fingerprint": "64cfdf882d3bef12",
     "source run fingerprint": "8918c959fdd5f9fa"
@@ -152,6 +152,106 @@
             "early_stopping_rounds": 30,
             "tree_method": "hist",
             "n_jobs": 4,
+            "max_depth": 2,
+            "min_child_weight": 3
+          },
+          "cv_log_loss": 0.22451023893801425,
+          "fold_log_loss": [
+            0.23325281673890838,
+            0.22982538728988877,
+            0.21045251278524563
+          ],
+          "rounds": 225
+        },
+        {
+          "params": {
+            "learning_rate": 0.05,
+            "subsample": 0.8,
+            "colsample_bytree": 0.8,
+            "n_estimators": 500,
+            "early_stopping_rounds": 30,
+            "tree_method": "hist",
+            "n_jobs": 4,
+            "max_depth": 2,
+            "min_child_weight": 10
+          },
+          "cv_log_loss": 0.22362094832204715,
+          "fold_log_loss": [
+            0.23057988855665446,
+            0.22963521462691522,
+            0.21064774178257178
+          ],
+          "rounds": 238
+        },
+        {
+          "params": {
+            "learning_rate": 0.05,
+            "subsample": 0.8,
+            "colsample_bytree": 0.8,
+            "n_estimators": 500,
+            "early_stopping_rounds": 30,
+            "tree_method": "hist",
+            "n_jobs": 4,
+            "max_depth": 2,
+            "min_child_weight": 50
+          },
+          "cv_log_loss": 0.22354654725907905,
+          "fold_log_loss": [
+            0.23170859736456847,
+            0.22966607990204072,
+            0.20926496451062793
+          ],
+          "rounds": 326
+        },
+        {
+          "params": {
+            "learning_rate": 0.05,
+            "subsample": 0.8,
+            "colsample_bytree": 0.8,
+            "n_estimators": 500,
+            "early_stopping_rounds": 30,
+            "tree_method": "hist",
+            "n_jobs": 4,
+            "max_depth": 2,
+            "min_child_weight": 200
+          },
+          "cv_log_loss": 0.22680896991520152,
+          "fold_log_loss": [
+            0.2376285412728615,
+            0.2322482680113155,
+            0.21055010046142758
+          ],
+          "rounds": 278
+        },
+        {
+          "params": {
+            "learning_rate": 0.05,
+            "subsample": 0.8,
+            "colsample_bytree": 0.8,
+            "n_estimators": 500,
+            "early_stopping_rounds": 30,
+            "tree_method": "hist",
+            "n_jobs": 4,
+            "max_depth": 3,
+            "min_child_weight": 3
+          },
+          "cv_log_loss": 0.22471280664942375,
+          "fold_log_loss": [
+            0.23509504158955719,
+            0.22926439004784338,
+            0.2097789883108707
+          ],
+          "rounds": 123
+        },
+        {
+          "params": {
+            "learning_rate": 0.05,
+            "subsample": 0.8,
+            "colsample_bytree": 0.8,
+            "n_estimators": 500,
+            "early_stopping_rounds": 30,
+            "tree_method": "hist",
+            "n_jobs": 4,
             "max_depth": 3,
             "min_child_weight": 10
           },
@@ -213,6 +313,26 @@
             "tree_method": "hist",
             "n_jobs": 4,
             "max_depth": 5,
+            "min_child_weight": 3
+          },
+          "cv_log_loss": 0.22537644969154416,
+          "fold_log_loss": [
+            0.23557656081122566,
+            0.23012745540599447,
+            0.21042533285741244
+          ],
+          "rounds": 90
+        },
+        {
+          "params": {
+            "learning_rate": 0.05,
+            "subsample": 0.8,
+            "colsample_bytree": 0.8,
+            "n_estimators": 500,
+            "early_stopping_rounds": 30,
+            "tree_method": "hist",
+            "n_jobs": 4,
+            "max_depth": 5,
             "min_child_weight": 10
           },
           "cv_log_loss": 0.22406859038778573,
@@ -262,6 +382,26 @@
             0.21065078056592335
           ],
           "rounds": 272
+        },
+        {
+          "params": {
+            "learning_rate": 0.05,
+            "subsample": 0.8,
+            "colsample_bytree": 0.8,
+            "n_estimators": 500,
+            "early_stopping_rounds": 30,
+            "tree_method": "hist",
+            "n_jobs": 4,
+            "max_depth": 7,
+            "min_child_weight": 3
+          },
+          "cv_log_loss": 0.22749593567382523,
+          "fold_log_loss": [
+            0.23818815887341258,
+            0.2310210482334787,
+            0.21327859991458448
+          ],
+          "rounds": 71
         },
         {
           "params": {
@@ -449,6 +589,106 @@
             "early_stopping_rounds": 30,
             "tree_method": "hist",
             "n_jobs": 4,
+            "max_depth": 2,
+            "min_child_weight": 3
+          },
+          "cv_log_loss": 0.2247724490302961,
+          "fold_log_loss": [
+            0.23315271410077396,
+            0.23003861840099976,
+            0.21112601458911462
+          ],
+          "rounds": 206
+        },
+        {
+          "params": {
+            "learning_rate": 0.05,
+            "subsample": 0.8,
+            "colsample_bytree": 0.8,
+            "n_estimators": 500,
+            "early_stopping_rounds": 30,
+            "tree_method": "hist",
+            "n_jobs": 4,
+            "max_depth": 2,
+            "min_child_weight": 10
+          },
+          "cv_log_loss": 0.2241544003057461,
+          "fold_log_loss": [
+            0.2314637523389069,
+            0.2299543421499256,
+            0.2110451064284058
+          ],
+          "rounds": 241
+        },
+        {
+          "params": {
+            "learning_rate": 0.05,
+            "subsample": 0.8,
+            "colsample_bytree": 0.8,
+            "n_estimators": 500,
+            "early_stopping_rounds": 30,
+            "tree_method": "hist",
+            "n_jobs": 4,
+            "max_depth": 2,
+            "min_child_weight": 50
+          },
+          "cv_log_loss": 0.22346429973600399,
+          "fold_log_loss": [
+            0.23089398104875442,
+            0.2295385664113985,
+            0.20996035174785896
+          ],
+          "rounds": 314
+        },
+        {
+          "params": {
+            "learning_rate": 0.05,
+            "subsample": 0.8,
+            "colsample_bytree": 0.8,
+            "n_estimators": 500,
+            "early_stopping_rounds": 30,
+            "tree_method": "hist",
+            "n_jobs": 4,
+            "max_depth": 2,
+            "min_child_weight": 200
+          },
+          "cv_log_loss": 0.2272419011927457,
+          "fold_log_loss": [
+            0.23850985070277442,
+            0.23201828237802746,
+            0.21119757049743532
+          ],
+          "rounds": 342
+        },
+        {
+          "params": {
+            "learning_rate": 0.05,
+            "subsample": 0.8,
+            "colsample_bytree": 0.8,
+            "n_estimators": 500,
+            "early_stopping_rounds": 30,
+            "tree_method": "hist",
+            "n_jobs": 4,
+            "max_depth": 3,
+            "min_child_weight": 3
+          },
+          "cv_log_loss": 0.22531743774074312,
+          "fold_log_loss": [
+            0.2346023195129753,
+            0.2304691768760081,
+            0.21088081683324597
+          ],
+          "rounds": 118
+        },
+        {
+          "params": {
+            "learning_rate": 0.05,
+            "subsample": 0.8,
+            "colsample_bytree": 0.8,
+            "n_estimators": 500,
+            "early_stopping_rounds": 30,
+            "tree_method": "hist",
+            "n_jobs": 4,
             "max_depth": 3,
             "min_child_weight": 10
           },
@@ -510,6 +750,26 @@
             "tree_method": "hist",
             "n_jobs": 4,
             "max_depth": 5,
+            "min_child_weight": 3
+          },
+          "cv_log_loss": 0.2256638030913867,
+          "fold_log_loss": [
+            0.23519624625335267,
+            0.23054007722799935,
+            0.21125508579280813
+          ],
+          "rounds": 82
+        },
+        {
+          "params": {
+            "learning_rate": 0.05,
+            "subsample": 0.8,
+            "colsample_bytree": 0.8,
+            "n_estimators": 500,
+            "early_stopping_rounds": 30,
+            "tree_method": "hist",
+            "n_jobs": 4,
+            "max_depth": 5,
             "min_child_weight": 10
           },
           "cv_log_loss": 0.22399782065494492,
@@ -559,6 +819,26 @@
             0.2115324159932092
           ],
           "rounds": 235
+        },
+        {
+          "params": {
+            "learning_rate": 0.05,
+            "subsample": 0.8,
+            "colsample_bytree": 0.8,
+            "n_estimators": 500,
+            "early_stopping_rounds": 30,
+            "tree_method": "hist",
+            "n_jobs": 4,
+            "max_depth": 7,
+            "min_child_weight": 3
+          },
+          "cv_log_loss": 0.22894072967178322,
+          "fold_log_loss": [
+            0.23802292644958414,
+            0.2330827855644818,
+            0.2157164770012837
+          ],
+          "rounds": 66
         },
         {
           "params": {
@@ -746,6 +1026,106 @@
             "early_stopping_rounds": 30,
             "tree_method": "hist",
             "n_jobs": 4,
+            "max_depth": 2,
+            "min_child_weight": 3
+          },
+          "cv_log_loss": 0.22677738486064083,
+          "fold_log_loss": [
+            0.23394562400587177,
+            0.2324988415806887,
+            0.21388768899536204
+          ],
+          "rounds": 183
+        },
+        {
+          "params": {
+            "learning_rate": 0.05,
+            "subsample": 0.8,
+            "colsample_bytree": 0.8,
+            "n_estimators": 500,
+            "early_stopping_rounds": 30,
+            "tree_method": "hist",
+            "n_jobs": 4,
+            "max_depth": 2,
+            "min_child_weight": 10
+          },
+          "cv_log_loss": 0.22641056084049918,
+          "fold_log_loss": [
+            0.23337735205211502,
+            0.23267944686763278,
+            0.21317488360174972
+          ],
+          "rounds": 179
+        },
+        {
+          "params": {
+            "learning_rate": 0.05,
+            "subsample": 0.8,
+            "colsample_bytree": 0.8,
+            "n_estimators": 500,
+            "early_stopping_rounds": 30,
+            "tree_method": "hist",
+            "n_jobs": 4,
+            "max_depth": 2,
+            "min_child_weight": 50
+          },
+          "cv_log_loss": 0.2271076195278804,
+          "fold_log_loss": [
+            0.23582998726066104,
+            0.23214674889067205,
+            0.2133461224323081
+          ],
+          "rounds": 186
+        },
+        {
+          "params": {
+            "learning_rate": 0.05,
+            "subsample": 0.8,
+            "colsample_bytree": 0.8,
+            "n_estimators": 500,
+            "early_stopping_rounds": 30,
+            "tree_method": "hist",
+            "n_jobs": 4,
+            "max_depth": 2,
+            "min_child_weight": 200
+          },
+          "cv_log_loss": 0.2287839254009153,
+          "fold_log_loss": [
+            0.23692205282760243,
+            0.2346911784199816,
+            0.21473854495516187
+          ],
+          "rounds": 219
+        },
+        {
+          "params": {
+            "learning_rate": 0.05,
+            "subsample": 0.8,
+            "colsample_bytree": 0.8,
+            "n_estimators": 500,
+            "early_stopping_rounds": 30,
+            "tree_method": "hist",
+            "n_jobs": 4,
+            "max_depth": 3,
+            "min_child_weight": 3
+          },
+          "cv_log_loss": 0.22620080482768493,
+          "fold_log_loss": [
+            0.234704123813939,
+            0.2309566897886959,
+            0.21294160088041994
+          ],
+          "rounds": 126
+        },
+        {
+          "params": {
+            "learning_rate": 0.05,
+            "subsample": 0.8,
+            "colsample_bytree": 0.8,
+            "n_estimators": 500,
+            "early_stopping_rounds": 30,
+            "tree_method": "hist",
+            "n_jobs": 4,
             "max_depth": 3,
             "min_child_weight": 10
           },
@@ -807,6 +1187,26 @@
             "tree_method": "hist",
             "n_jobs": 4,
             "max_depth": 5,
+            "min_child_weight": 3
+          },
+          "cv_log_loss": 0.2272070670410299,
+          "fold_log_loss": [
+            0.2363895498475714,
+            0.23158305212561212,
+            0.2136485991499061
+          ],
+          "rounds": 81
+        },
+        {
+          "params": {
+            "learning_rate": 0.05,
+            "subsample": 0.8,
+            "colsample_bytree": 0.8,
+            "n_estimators": 500,
+            "early_stopping_rounds": 30,
+            "tree_method": "hist",
+            "n_jobs": 4,
+            "max_depth": 5,
             "min_child_weight": 10
           },
           "cv_log_loss": 0.22618983514624932,
@@ -856,6 +1256,26 @@
             0.21440774473025273
           ],
           "rounds": 201
+        },
+        {
+          "params": {
+            "learning_rate": 0.05,
+            "subsample": 0.8,
+            "colsample_bytree": 0.8,
+            "n_estimators": 500,
+            "early_stopping_rounds": 30,
+            "tree_method": "hist",
+            "n_jobs": 4,
+            "max_depth": 7,
+            "min_child_weight": 3
+          },
+          "cv_log_loss": 0.22865981483454823,
+          "fold_log_loss": [
+            0.2378554598932848,
+            0.23281106491664452,
+            0.21531291969371533
+          ],
+          "rounds": 74
         },
         {
           "params": {

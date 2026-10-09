@@ -1,0 +1,1 @@
+"""Generic evaluation for probabilistic binary predictions (model- and vocabulary-agnostic)."""

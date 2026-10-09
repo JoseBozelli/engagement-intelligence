@@ -375,3 +375,30 @@ other deployments define their own.
 - Consequence: leakage protection is verified by behavior, independent of implementation,
   and covers feature kinds added later. The same function can gate training runs on real
   data.
+
+## Step 8 design and implementation decisions (approved 2026-10-09)
+
+### D-035 Model development protocol [LOCKED]
+- Decision: candidates are a recency baseline (one-feature logistic on days since engagement),
+  logistic regression (log1p on skewed non-negative features, standardization, L2), and
+  XGBoost, each on three feature sets: all, no_policy (policy-dependent features removed),
+  level_only (trajectory, overdue, and tenure features removed). No class reweighting, to
+  preserve calibration. Hyperparameters are chosen by mean log loss over three purged
+  expanding-window folds inside train; validation is used only for model and ablation
+  comparison, calibration, and threshold; test is read once at the end. Validation metrics:
+  log loss, PR-AUC, ROC-AUC, Brier, ECE, and precision/recall/lift at weekly review
+  capacities of 5/10/20% of eligible accounts. Uncertainty: 200-replicate account-clustered
+  bootstrap; comparisons use paired differences. Provisional selection: the simplest
+  candidate (linear before nonlinear, fewer features first) not significantly worse than
+  the best by validation log loss. The training entry point rejects non-development rows.
+- Alternatives: random k-fold CV (leaks future and splits correlated account rows);
+  larger or Bayesian searches (gains would sit inside bootstrap noise at this label
+  quality; stop rule).
+
+### D-036 XGBoost as the nonlinear candidate [LOCKED]
+- Decision: XGBoost (brief preference; prebuilt Windows wheels keep dependency burden low)
+  replaces HistGradientBoosting, which remains a documented fallback kind (hist_gb).
+  Early stopping inside each CV fold uses that fold's scoring window; the resulting slight
+  optimism applies equally to all XGBoost configurations and does not affect model
+  selection, which uses validation. Final XGBoost fits use the mean best round count from
+  CV, without early stopping.

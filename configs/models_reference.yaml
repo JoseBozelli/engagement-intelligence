@@ -1,0 +1,35 @@
+# Model development configuration. Capacities are shares of eligible accounts reviewed per
+# assessment week (business units, D-025). Grids are deliberately small (stop rule).
+# Conventions: the first feature set is the ablation reference; the first candidate kind is
+# the reference for nonlinear-vs-linear comparisons.
+seed: 20241001
+splits:
+  train: train
+  validation: validation
+baseline:
+  feature: days_since_engagement
+  params: {C: 1000000.0, max_iter: 1000}
+feature_sets:
+  all: {}
+  no_policy: {exclude_policy_dependent: true}
+  level_only:
+    exclude: [engagement_overdue_ratio, engagement_trend_30v90, attendance_trend_30v90, tenure_days]
+log1p_features: [days_since_engagement, days_since_attendance, days_since_reply, engagement_overdue_ratio,
+                 engagement_count_30d, engagement_count_90d, attendance_count_30d, attendance_count_90d,
+                 outreach_count_30d, outreach_count_90d, outstanding_requests, tenure_days]
+cv_folds:   # scoring windows inside train; fit rows precede each window, purged by the label horizon
+  - {score_start: 2024-11-04, score_end: 2025-01-06}
+  - {score_start: 2025-01-06, score_end: 2025-03-03}
+  - {score_start: 2025-03-03, score_end: 2025-05-05}
+candidates:
+  logistic:
+    grid: {C: [0.01, 0.1, 1.0]}
+    fixed: {max_iter: 2000}
+  xgboost:
+    grid: {max_depth: [3, 5], min_child_weight: [10, 50]}
+    fixed: {learning_rate: 0.05, subsample: 0.8, colsample_bytree: 0.8, n_estimators: 500,
+            early_stopping_rounds: 30, tree_method: hist, n_jobs: 4}
+evaluation:
+  capacities: [0.05, 0.10, 0.20]
+  bootstrap_replicates: 200
+  calibration_bins: 10

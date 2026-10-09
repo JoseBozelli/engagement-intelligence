@@ -1,0 +1,957 @@
+{
+  "provenance": {
+    "modeling config fingerprint": "e5290b1baffc79d4",
+    "feature spec fingerprint": "d177b052d82e477d",
+    "labeling config fingerprint": "64cfdf882d3bef12",
+    "source run fingerprint": "8918c959fdd5f9fa"
+  },
+  "candidates": [
+    {
+      "name": "baseline",
+      "kind": "logistic",
+      "feature_set": "baseline",
+      "features": [
+        "days_since_engagement"
+      ],
+      "params": {
+        "C": 1000000.0,
+        "max_iter": 1000
+      },
+      "cv_log_loss": null,
+      "cv_results": []
+    },
+    {
+      "name": "logistic[all]",
+      "kind": "logistic",
+      "feature_set": "all",
+      "features": [
+        "days_since_engagement",
+        "days_since_attendance",
+        "days_since_reply",
+        "engagement_overdue_ratio",
+        "engagement_count_30d",
+        "engagement_count_90d",
+        "attendance_count_30d",
+        "attendance_count_90d",
+        "outreach_count_30d",
+        "outreach_count_90d",
+        "engagement_trend_30v90",
+        "attendance_trend_30v90",
+        "reply_rate_30d",
+        "reply_rate_90d",
+        "no_show_rate_90d",
+        "cancel_rate_90d",
+        "completion_ratio_90d",
+        "outstanding_requests",
+        "tenure_days"
+      ],
+      "params": {
+        "max_iter": 2000,
+        "C": 0.01
+      },
+      "cv_log_loss": 0.22797823572819284,
+      "cv_results": [
+        {
+          "params": {
+            "max_iter": 2000,
+            "C": 0.01
+          },
+          "cv_log_loss": 0.22797823572819284,
+          "fold_log_loss": [
+            0.23277650436002886,
+            0.23529005422699228,
+            0.21586814859755726
+          ],
+          "rounds": null
+        },
+        {
+          "params": {
+            "max_iter": 2000,
+            "C": 0.1
+          },
+          "cv_log_loss": 0.22806860787704752,
+          "fold_log_loss": [
+            0.23287427069533817,
+            0.23535088159289058,
+            0.2159806713429138
+          ],
+          "rounds": null
+        },
+        {
+          "params": {
+            "max_iter": 2000,
+            "C": 1.0
+          },
+          "cv_log_loss": 0.22826739731072251,
+          "fold_log_loss": [
+            0.23326562890636668,
+            0.23552748554954567,
+            0.2160090774762552
+          ],
+          "rounds": null
+        }
+      ]
+    },
+    {
+      "name": "xgboost[all]",
+      "kind": "xgboost",
+      "feature_set": "all",
+      "features": [
+        "days_since_engagement",
+        "days_since_attendance",
+        "days_since_reply",
+        "engagement_overdue_ratio",
+        "engagement_count_30d",
+        "engagement_count_90d",
+        "attendance_count_30d",
+        "attendance_count_90d",
+        "outreach_count_30d",
+        "outreach_count_90d",
+        "engagement_trend_30v90",
+        "attendance_trend_30v90",
+        "reply_rate_30d",
+        "reply_rate_90d",
+        "no_show_rate_90d",
+        "cancel_rate_90d",
+        "completion_ratio_90d",
+        "outstanding_requests",
+        "tenure_days"
+      ],
+      "params": {
+        "learning_rate": 0.05,
+        "subsample": 0.8,
+        "colsample_bytree": 0.8,
+        "n_estimators": 500,
+        "early_stopping_rounds": 30,
+        "tree_method": "hist",
+        "n_jobs": 4,
+        "max_depth": 5,
+        "min_child_weight": 50
+      },
+      "cv_log_loss": 0.2230468547723006,
+      "cv_results": [
+        {
+          "params": {
+            "learning_rate": 0.05,
+            "subsample": 0.8,
+            "colsample_bytree": 0.8,
+            "n_estimators": 500,
+            "early_stopping_rounds": 30,
+            "tree_method": "hist",
+            "n_jobs": 4,
+            "max_depth": 3,
+            "min_child_weight": 10
+          },
+          "cv_log_loss": 0.22408056061062753,
+          "fold_log_loss": [
+            0.23308684439511979,
+            0.22921773493374656,
+            0.2099371025030162
+          ],
+          "rounds": 134
+        },
+        {
+          "params": {
+            "learning_rate": 0.05,
+            "subsample": 0.8,
+            "colsample_bytree": 0.8,
+            "n_estimators": 500,
+            "early_stopping_rounds": 30,
+            "tree_method": "hist",
+            "n_jobs": 4,
+            "max_depth": 3,
+            "min_child_weight": 50
+          },
+          "cv_log_loss": 0.22326003593456015,
+          "fold_log_loss": [
+            0.2308965130141315,
+            0.2297116443462234,
+            0.2091719504433256
+          ],
+          "rounds": 203
+        },
+        {
+          "params": {
+            "learning_rate": 0.05,
+            "subsample": 0.8,
+            "colsample_bytree": 0.8,
+            "n_estimators": 500,
+            "early_stopping_rounds": 30,
+            "tree_method": "hist",
+            "n_jobs": 4,
+            "max_depth": 5,
+            "min_child_weight": 10
+          },
+          "cv_log_loss": 0.22406859038778573,
+          "fold_log_loss": [
+            0.23270974912040357,
+            0.22902873010944505,
+            0.21046729193350863
+          ],
+          "rounds": 85
+        },
+        {
+          "params": {
+            "learning_rate": 0.05,
+            "subsample": 0.8,
+            "colsample_bytree": 0.8,
+            "n_estimators": 500,
+            "early_stopping_rounds": 30,
+            "tree_method": "hist",
+            "n_jobs": 4,
+            "max_depth": 5,
+            "min_child_weight": 50
+          },
+          "cv_log_loss": 0.2230468547723006,
+          "fold_log_loss": [
+            0.2310331884687387,
+            0.22892354301879575,
+            0.20918383282936734
+          ],
+          "rounds": 128
+        }
+      ]
+    },
+    {
+      "name": "logistic[no_policy]",
+      "kind": "logistic",
+      "feature_set": "no_policy",
+      "features": [
+        "days_since_engagement",
+        "days_since_attendance",
+        "days_since_reply",
+        "engagement_overdue_ratio",
+        "engagement_count_30d",
+        "engagement_count_90d",
+        "attendance_count_30d",
+        "attendance_count_90d",
+        "engagement_trend_30v90",
+        "attendance_trend_30v90",
+        "no_show_rate_90d",
+        "cancel_rate_90d",
+        "completion_ratio_90d",
+        "outstanding_requests",
+        "tenure_days"
+      ],
+      "params": {
+        "max_iter": 2000,
+        "C": 0.01
+      },
+      "cv_log_loss": 0.2295286801897384,
+      "cv_results": [
+        {
+          "params": {
+            "max_iter": 2000,
+            "C": 0.01
+          },
+          "cv_log_loss": 0.2295286801897384,
+          "fold_log_loss": [
+            0.2342515131653769,
+            0.23641842339967067,
+            0.2179161040041677
+          ],
+          "rounds": null
+        },
+        {
+          "params": {
+            "max_iter": 2000,
+            "C": 0.1
+          },
+          "cv_log_loss": 0.22982119858798156,
+          "fold_log_loss": [
+            0.23446847253165992,
+            0.2366587180330641,
+            0.21833640519922065
+          ],
+          "rounds": null
+        },
+        {
+          "params": {
+            "max_iter": 2000,
+            "C": 1.0
+          },
+          "cv_log_loss": 0.230047449111931,
+          "fold_log_loss": [
+            0.23491908243503426,
+            0.23682520039202196,
+            0.2183980645087368
+          ],
+          "rounds": null
+        }
+      ]
+    },
+    {
+      "name": "xgboost[no_policy]",
+      "kind": "xgboost",
+      "feature_set": "no_policy",
+      "features": [
+        "days_since_engagement",
+        "days_since_attendance",
+        "days_since_reply",
+        "engagement_overdue_ratio",
+        "engagement_count_30d",
+        "engagement_count_90d",
+        "attendance_count_30d",
+        "attendance_count_90d",
+        "engagement_trend_30v90",
+        "attendance_trend_30v90",
+        "no_show_rate_90d",
+        "cancel_rate_90d",
+        "completion_ratio_90d",
+        "outstanding_requests",
+        "tenure_days"
+      ],
+      "params": {
+        "learning_rate": 0.05,
+        "subsample": 0.8,
+        "colsample_bytree": 0.8,
+        "n_estimators": 500,
+        "early_stopping_rounds": 30,
+        "tree_method": "hist",
+        "n_jobs": 4,
+        "max_depth": 5,
+        "min_child_weight": 50
+      },
+      "cv_log_loss": 0.22332849383227996,
+      "cv_results": [
+        {
+          "params": {
+            "learning_rate": 0.05,
+            "subsample": 0.8,
+            "colsample_bytree": 0.8,
+            "n_estimators": 500,
+            "early_stopping_rounds": 30,
+            "tree_method": "hist",
+            "n_jobs": 4,
+            "max_depth": 3,
+            "min_child_weight": 10
+          },
+          "cv_log_loss": 0.22410071127855266,
+          "fold_log_loss": [
+            0.23145005464661453,
+            0.22974416462242409,
+            0.21110791456661934
+          ],
+          "rounds": 127
+        },
+        {
+          "params": {
+            "learning_rate": 0.05,
+            "subsample": 0.8,
+            "colsample_bytree": 0.8,
+            "n_estimators": 500,
+            "early_stopping_rounds": 30,
+            "tree_method": "hist",
+            "n_jobs": 4,
+            "max_depth": 3,
+            "min_child_weight": 50
+          },
+          "cv_log_loss": 0.2235366487119815,
+          "fold_log_loss": [
+            0.23095148167710142,
+            0.22948662407824252,
+            0.2101718403806006
+          ],
+          "rounds": 216
+        },
+        {
+          "params": {
+            "learning_rate": 0.05,
+            "subsample": 0.8,
+            "colsample_bytree": 0.8,
+            "n_estimators": 500,
+            "early_stopping_rounds": 30,
+            "tree_method": "hist",
+            "n_jobs": 4,
+            "max_depth": 5,
+            "min_child_weight": 10
+          },
+          "cv_log_loss": 0.22399782065494492,
+          "fold_log_loss": [
+            0.23202990678274601,
+            0.22985800601687412,
+            0.21010554916521465
+          ],
+          "rounds": 94
+        },
+        {
+          "params": {
+            "learning_rate": 0.05,
+            "subsample": 0.8,
+            "colsample_bytree": 0.8,
+            "n_estimators": 500,
+            "early_stopping_rounds": 30,
+            "tree_method": "hist",
+            "n_jobs": 4,
+            "max_depth": 5,
+            "min_child_weight": 50
+          },
+          "cv_log_loss": 0.22332849383227996,
+          "fold_log_loss": [
+            0.23107779616689053,
+            0.2292203285404777,
+            0.20968735678947167
+          ],
+          "rounds": 134
+        }
+      ]
+    },
+    {
+      "name": "logistic[level_only]",
+      "kind": "logistic",
+      "feature_set": "level_only",
+      "features": [
+        "days_since_engagement",
+        "days_since_attendance",
+        "days_since_reply",
+        "engagement_count_30d",
+        "engagement_count_90d",
+        "attendance_count_30d",
+        "attendance_count_90d",
+        "outreach_count_30d",
+        "outreach_count_90d",
+        "reply_rate_30d",
+        "reply_rate_90d",
+        "no_show_rate_90d",
+        "cancel_rate_90d",
+        "completion_ratio_90d",
+        "outstanding_requests"
+      ],
+      "params": {
+        "max_iter": 2000,
+        "C": 0.01
+      },
+      "cv_log_loss": 0.22821073471756392,
+      "cv_results": [
+        {
+          "params": {
+            "max_iter": 2000,
+            "C": 0.01
+          },
+          "cv_log_loss": 0.22821073471756392,
+          "fold_log_loss": [
+            0.23260240603010898,
+            0.2356206677689023,
+            0.2164091303536805
+          ],
+          "rounds": null
+        },
+        {
+          "params": {
+            "max_iter": 2000,
+            "C": 0.1
+          },
+          "cv_log_loss": 0.22825672800721056,
+          "fold_log_loss": [
+            0.23235652555359995,
+            0.23579031932326272,
+            0.21662333914476903
+          ],
+          "rounds": null
+        },
+        {
+          "params": {
+            "max_iter": 2000,
+            "C": 1.0
+          },
+          "cv_log_loss": 0.22838775936552488,
+          "fold_log_loss": [
+            0.23262671073171623,
+            0.23586907241262858,
+            0.21666749495222978
+          ],
+          "rounds": null
+        }
+      ]
+    },
+    {
+      "name": "xgboost[level_only]",
+      "kind": "xgboost",
+      "feature_set": "level_only",
+      "features": [
+        "days_since_engagement",
+        "days_since_attendance",
+        "days_since_reply",
+        "engagement_count_30d",
+        "engagement_count_90d",
+        "attendance_count_30d",
+        "attendance_count_90d",
+        "outreach_count_30d",
+        "outreach_count_90d",
+        "reply_rate_30d",
+        "reply_rate_90d",
+        "no_show_rate_90d",
+        "cancel_rate_90d",
+        "completion_ratio_90d",
+        "outstanding_requests"
+      ],
+      "params": {
+        "learning_rate": 0.05,
+        "subsample": 0.8,
+        "colsample_bytree": 0.8,
+        "n_estimators": 500,
+        "early_stopping_rounds": 30,
+        "tree_method": "hist",
+        "n_jobs": 4,
+        "max_depth": 3,
+        "min_child_weight": 10
+      },
+      "cv_log_loss": 0.22612028601173814,
+      "cv_results": [
+        {
+          "params": {
+            "learning_rate": 0.05,
+            "subsample": 0.8,
+            "colsample_bytree": 0.8,
+            "n_estimators": 500,
+            "early_stopping_rounds": 30,
+            "tree_method": "hist",
+            "n_jobs": 4,
+            "max_depth": 3,
+            "min_child_weight": 10
+          },
+          "cv_log_loss": 0.22612028601173814,
+          "fold_log_loss": [
+            0.23345261874222792,
+            0.23154248380037037,
+            0.2133657554926161
+          ],
+          "rounds": 119
+        },
+        {
+          "params": {
+            "learning_rate": 0.05,
+            "subsample": 0.8,
+            "colsample_bytree": 0.8,
+            "n_estimators": 500,
+            "early_stopping_rounds": 30,
+            "tree_method": "hist",
+            "n_jobs": 4,
+            "max_depth": 3,
+            "min_child_weight": 50
+          },
+          "cv_log_loss": 0.22654267800796676,
+          "fold_log_loss": [
+            0.23527103448589665,
+            0.23167695812600983,
+            0.2126800414119938
+          ],
+          "rounds": 133
+        },
+        {
+          "params": {
+            "learning_rate": 0.05,
+            "subsample": 0.8,
+            "colsample_bytree": 0.8,
+            "n_estimators": 500,
+            "early_stopping_rounds": 30,
+            "tree_method": "hist",
+            "n_jobs": 4,
+            "max_depth": 5,
+            "min_child_weight": 10
+          },
+          "cv_log_loss": 0.22618983514624932,
+          "fold_log_loss": [
+            0.23466130353661188,
+            0.23118878641994525,
+            0.21271941548219087
+          ],
+          "rounds": 91
+        },
+        {
+          "params": {
+            "learning_rate": 0.05,
+            "subsample": 0.8,
+            "colsample_bytree": 0.8,
+            "n_estimators": 500,
+            "early_stopping_rounds": 30,
+            "tree_method": "hist",
+            "n_jobs": 4,
+            "max_depth": 5,
+            "min_child_weight": 50
+          },
+          "cv_log_loss": 0.2262227817943745,
+          "fold_log_loss": [
+            0.23478430946459944,
+            0.2314988418757076,
+            0.21238519404281636
+          ],
+          "rounds": 100
+        }
+      ]
+    }
+  ],
+  "validation": {
+    "baseline": {
+      "n": 18927,
+      "prevalence": 0.11100544196121942,
+      "mean_predicted": 0.10065124113902991,
+      "log_loss": 0.2754891985383175,
+      "brier": 0.07890739956211772,
+      "ece": 0.016678129612003902,
+      "roc_auc": 0.8185711942709185,
+      "pr_auc": 0.42552318145215584,
+      "precision@5%": 0.5729275970619098,
+      "recall@5%": 0.2598762494050452,
+      "lift@5%": 5.161256844165048,
+      "precision@10%": 0.48789473684210527,
+      "recall@10%": 0.44121846739647785,
+      "lift@10%": 4.395232596006914,
+      "precision@20%": 0.35584278554471116,
+      "recall@20%": 0.6420752022846263,
+      "lift@20%": 3.2056336991931214,
+      "log_loss_ci": [
+        0.2558507943428113,
+        0.29464338845561355
+      ],
+      "pr_auc_ci": [
+        0.38001103347051945,
+        0.46530130652825696
+      ],
+      "warm_log_loss": 0.27789238758962453,
+      "warm_pr_auc": 0.4271514700039243,
+      "cold_log_loss": 0.2188973692055931,
+      "cold_pr_auc": 0.42777938699770307
+    },
+    "logistic[all]": {
+      "n": 18927,
+      "prevalence": 0.11100544196121942,
+      "mean_predicted": 0.11217322624445138,
+      "log_loss": 0.2405541237849575,
+      "brier": 0.0705845875499811,
+      "ece": 0.0027702157462598186,
+      "roc_auc": 0.8727694322712751,
+      "pr_auc": 0.5140435853616964,
+      "precision@5%": 0.640083945435467,
+      "recall@5%": 0.2903379343169919,
+      "lift@5%": 5.766239331393186,
+      "precision@10%": 0.5436842105263158,
+      "recall@10%": 0.49167063303188957,
+      "lift@10%": 4.897815827049776,
+      "precision@20%": 0.3996307042996571,
+      "recall@20%": 0.7210851975249881,
+      "lift@20%": 3.6001001143644027,
+      "log_loss_ci": [
+        0.22296112207803104,
+        0.25919291013604817
+      ],
+      "pr_auc_ci": [
+        0.46446718605247583,
+        0.5591074421196819
+      ],
+      "warm_log_loss": 0.24181181454944675,
+      "warm_pr_auc": 0.5184083695918648,
+      "cold_log_loss": 0.21093721908966978,
+      "cold_pr_auc": 0.3721476171685321
+    },
+    "xgboost[all]": {
+      "n": 18927,
+      "prevalence": 0.11100544196121942,
+      "mean_predicted": 0.10855361074209213,
+      "log_loss": 0.23929653242246898,
+      "brier": 0.06999661773443222,
+      "ece": 0.006780496080736527,
+      "roc_auc": 0.8746546744677287,
+      "pr_auc": 0.5205074921875206,
+      "precision@5%": 0.6537250786988458,
+      "recall@5%": 0.29652546406473107,
+      "lift@5%": 5.889126399111401,
+      "precision@10%": 0.5578947368421052,
+      "recall@10%": 0.504521656354117,
+      "lift@10%": 5.025832310428617,
+      "precision@20%": 0.4014771828013717,
+      "recall@20%": 0.7244169443122322,
+      "lift@20%": 3.61673424030536,
+      "log_loss_ci": [
+        0.21959370301971437,
+        0.2601912875131392
+      ],
+      "pr_auc_ci": [
+        0.4624940836441618,
+        0.5704558427578283
+      ],
+      "warm_log_loss": 0.2403554186885445,
+      "warm_pr_auc": 0.5252010150762492,
+      "cold_log_loss": 0.2143612029193991,
+      "cold_pr_auc": 0.39480654630807765
+    },
+    "logistic[no_policy]": {
+      "n": 18927,
+      "prevalence": 0.11100544196121942,
+      "mean_predicted": 0.11812706203452933,
+      "log_loss": 0.24153647973521739,
+      "brier": 0.07088810827725306,
+      "ece": 0.008038917996031519,
+      "roc_auc": 0.8721693150369663,
+      "pr_auc": 0.5091905617054716,
+      "precision@5%": 0.6264428121720882,
+      "recall@5%": 0.2841504045692527,
+      "lift@5%": 5.643352263674971,
+      "precision@10%": 0.5468421052631579,
+      "recall@10%": 0.49452641599238456,
+      "lift@10%": 4.926263934467296,
+      "precision@20%": 0.4009496175151675,
+      "recall@20%": 0.723465016658734,
+      "lift@20%": 3.611981632893658,
+      "log_loss_ci": [
+        0.2250309404358538,
+        0.2601985088550973
+      ],
+      "pr_auc_ci": [
+        0.4571122175297532,
+        0.5529460274420663
+      ],
+      "warm_log_loss": 0.24275889996449634,
+      "warm_pr_auc": 0.5136990501812831,
+      "cold_log_loss": 0.2127501481103296,
+      "cold_pr_auc": 0.33949142708033025
+    },
+    "xgboost[no_policy]": {
+      "n": 18927,
+      "prevalence": 0.11100544196121942,
+      "mean_predicted": 0.1075146421790123,
+      "log_loss": 0.2389358052009207,
+      "brier": 0.0698055773973465,
+      "ece": 0.0059179466955797564,
+      "roc_auc": 0.8747310504532405,
+      "pr_auc": 0.5219451556079333,
+      "precision@5%": 0.6610703043022036,
+      "recall@5%": 0.29985721085197525,
+      "lift@5%": 5.955296358651979,
+      "precision@10%": 0.5573684210526316,
+      "recall@10%": 0.504045692527368,
+      "lift@10%": 5.021090959192365,
+      "precision@20%": 0.4027960960168821,
+      "recall@20%": 0.7267967634459781,
+      "lift@20%": 3.6286157588346155,
+      "log_loss_ci": [
+        0.21945551109903638,
+        0.2593589187976768
+      ],
+      "pr_auc_ci": [
+        0.46334404973305554,
+        0.5751782049894535
+      ],
+      "warm_log_loss": 0.23992474259334484,
+      "warm_pr_auc": 0.526695904249308,
+      "cold_log_loss": 0.2156476764112286,
+      "cold_pr_auc": 0.3947074858235
+    },
+    "logistic[level_only]": {
+      "n": 18927,
+      "prevalence": 0.11100544196121942,
+      "mean_predicted": 0.11411379904142772,
+      "log_loss": 0.24184820525138062,
+      "brier": 0.0710235539894921,
+      "ece": 0.0035832537659068846,
+      "roc_auc": 0.8714323150641788,
+      "pr_auc": 0.5030886564457139,
+      "precision@5%": 0.6316894018887723,
+      "recall@5%": 0.2865302237029986,
+      "lift@5%": 5.690616520489669,
+      "precision@10%": 0.5442105263157895,
+      "recall@10%": 0.49214659685863876,
+      "lift@10%": 4.902557178286029,
+      "precision@20%": 0.39883935637035084,
+      "recall@20%": 0.7196573060447407,
+      "lift@20%": 3.5929712032468495,
+      "log_loss_ci": [
+        0.22493950095837092,
+        0.26036738741406473
+      ],
+      "pr_auc_ci": [
+        0.4533426106723247,
+        0.5451268314138704
+      ],
+      "warm_log_loss": 0.243119754282842,
+      "warm_pr_auc": 0.5074449269851873,
+      "cold_log_loss": 0.21190495724202454,
+      "cold_pr_auc": 0.3681568587775258
+    },
+    "xgboost[level_only]": {
+      "n": 18927,
+      "prevalence": 0.11100544196121942,
+      "mean_predicted": 0.11072511970996857,
+      "log_loss": 0.2398545701527276,
+      "brier": 0.07018978893756866,
+      "ece": 0.004387359165803483,
+      "roc_auc": 0.8731142557021604,
+      "pr_auc": 0.5159316672030685,
+      "precision@5%": 0.6516264428121721,
+      "recall@5%": 0.29557353641123274,
+      "lift@5%": 5.8702206963855215,
+      "precision@10%": 0.56,
+      "recall@10%": 0.5064255116611137,
+      "lift@10%": 5.044797715373632,
+      "precision@20%": 0.4009496175151675,
+      "recall@20%": 0.723465016658734,
+      "lift@20%": 3.611981632893658,
+      "log_loss_ci": [
+        0.2215283176093308,
+        0.2597398222227776
+      ],
+      "pr_auc_ci": [
+        0.4639347779067348,
+        0.5596086272162655
+      ],
+      "warm_log_loss": 0.24096308152327173,
+      "warm_pr_auc": 0.5205263315655485,
+      "cold_log_loss": 0.2137506370222493,
+      "cold_pr_auc": 0.39085993554334086
+    }
+  },
+  "comparisons": [
+    {
+      "question": "vs recency baseline",
+      "a": "logistic[all]",
+      "b": "baseline",
+      "log_loss_diff": -0.034935074753359996,
+      "ci": [
+        -0.04296789691700888,
+        -0.025726905876929003
+      ],
+      "reading": "better"
+    },
+    {
+      "question": "vs recency baseline",
+      "a": "xgboost[all]",
+      "b": "baseline",
+      "log_loss_diff": -0.03619266611584851,
+      "ci": [
+        -0.046026943680214503,
+        -0.025854796696615386
+      ],
+      "reading": "better"
+    },
+    {
+      "question": "vs recency baseline",
+      "a": "logistic[no_policy]",
+      "b": "baseline",
+      "log_loss_diff": -0.03395271880310011,
+      "ci": [
+        -0.04260212509101302,
+        -0.024773298536702515
+      ],
+      "reading": "better"
+    },
+    {
+      "question": "vs recency baseline",
+      "a": "xgboost[no_policy]",
+      "b": "baseline",
+      "log_loss_diff": -0.036553393337396795,
+      "ci": [
+        -0.04651466813828171,
+        -0.02647149557941829
+      ],
+      "reading": "better"
+    },
+    {
+      "question": "vs recency baseline",
+      "a": "logistic[level_only]",
+      "b": "baseline",
+      "log_loss_diff": -0.03364099328693687,
+      "ci": [
+        -0.042080404418280495,
+        -0.0246338844106005
+      ],
+      "reading": "better"
+    },
+    {
+      "question": "vs recency baseline",
+      "a": "xgboost[level_only]",
+      "b": "baseline",
+      "log_loss_diff": -0.035634628385589895,
+      "ci": [
+        -0.044418539394975684,
+        -0.026044800135697103
+      ],
+      "reading": "better"
+    },
+    {
+      "question": "xgboost vs logistic",
+      "a": "xgboost[all]",
+      "b": "logistic[all]",
+      "log_loss_diff": -0.0012575913624885138,
+      "ci": [
+        -0.0052969114251062615,
+        0.0024057096709443494
+      ],
+      "reading": "equivalent"
+    },
+    {
+      "question": "xgboost vs logistic",
+      "a": "xgboost[no_policy]",
+      "b": "logistic[no_policy]",
+      "log_loss_diff": -0.0026006745342966875,
+      "ci": [
+        -0.007086536617553665,
+        0.0017034245099287024
+      ],
+      "reading": "equivalent"
+    },
+    {
+      "question": "xgboost vs logistic",
+      "a": "xgboost[level_only]",
+      "b": "logistic[level_only]",
+      "log_loss_diff": -0.001993635098653024,
+      "ci": [
+        -0.004372835634988634,
+        0.0003587350936662724
+      ],
+      "reading": "equivalent"
+    },
+    {
+      "question": "no_policy vs all",
+      "a": "logistic[no_policy]",
+      "b": "logistic[all]",
+      "log_loss_diff": 0.0009823559502598889,
+      "ci": [
+        -0.0005006241796115599,
+        0.0022846026190024883
+      ],
+      "reading": "equivalent"
+    },
+    {
+      "question": "level_only vs all",
+      "a": "logistic[level_only]",
+      "b": "logistic[all]",
+      "log_loss_diff": 0.0012940814664231248,
+      "ci": [
+        0.0006834662840478894,
+        0.0019213228244705082
+      ],
+      "reading": "worse"
+    },
+    {
+      "question": "no_policy vs all",
+      "a": "xgboost[no_policy]",
+      "b": "xgboost[all]",
+      "log_loss_diff": -0.00036072722154828485,
+      "ci": [
+        -0.0017387492462066021,
+        0.0008015920376031169
+      ],
+      "reading": "equivalent"
+    },
+    {
+      "question": "level_only vs all",
+      "a": "xgboost[level_only]",
+      "b": "xgboost[all]",
+      "log_loss_diff": 0.0005580377302586148,
+      "ci": [
+        -0.0017066792820367104,
+        0.003061039127892607
+      ],
+      "reading": "equivalent"
+    }
+  ],
+  "selection": {
+    "best_by_log_loss": "xgboost[no_policy]",
+    "selected": "logistic[no_policy]",
+    "difference_vs_best_ci": [
+      -0.001703424509928702,
+      0.007086536617553666
+    ],
+    "rule": "simplest candidate not significantly worse than the best by validation log loss (paired, account-clustered bootstrap)"
+  }
+}

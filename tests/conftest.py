@@ -14,6 +14,7 @@ from engagement_intelligence.simulation.noise import apply_noise
 from engagement_intelligence.simulation.population import sample_population, utc_midnight
 from engagement_intelligence.core.roles import load_roles
 from engagement_intelligence.features.spec import load_feature_spec
+from engagement_intelligence.models.config import load_modeling_config
 
 CONFIG_DIR = Path(__file__).resolve().parents[1] / "configs"
 
@@ -61,3 +62,7 @@ def small_pipeline(small_cfg, labeling_cfg):
         assessments=build_assessments(labeling_cfg, observable, as_of),
         as_of=as_of,
     )
+
+@pytest.fixture(scope="session")
+def modeling_cfg(features_spec):
+    return load_modeling_config(CONFIG_DIR / "models_reference.yaml", spec=features_spec)

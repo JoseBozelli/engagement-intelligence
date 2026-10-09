@@ -255,3 +255,19 @@ other deployments define their own.
 - Alternatives: convert simulator predictors to base probabilities and odds ratios now
   (deferred: readability gain does not change any business-facing interface).
 - Consequence: integration requires configuring meanings, not reverse-engineering numbers.
+
+## Step 3c implementation decisions
+
+### D-026 Observation noise and the observable store [ACTIVE]
+- Decision: the observable store is the clean stream after configured noise: dropped
+  events, lognormal recording delay (recorded_at > timestamp), uniform timestamp jitter
+  (clamped to account creation), and exact duplicates (identical rows, same event_id;
+  D-009). Exempt types (system-of-record events) are never perturbed. Events recorded at
+  or after the horizon are excluded as not yet observable. A per-event noise log in truth
+  records every action. All draws come from each account's own noise stream, one column per
+  mechanism, and are applied vectorized. Parameters are in business units (D-025).
+- Alternatives: noise inside event generation (couples mechanisms; no audit trail);
+  near-duplicates (deferred, D-009).
+- Evidence: tests/test_noise.py (rates, reconciliation, bounds, independence, determinism).
+- Consequence: features and models read only data/<run>/observable/; recording delay is
+  the test bed for point-in-time leakage controls in the labeling step.

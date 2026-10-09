@@ -212,3 +212,13 @@ events:
         disengaged: -2.5
     open_delay_hours_mean: 6
     reply_delay_hours_mean: 12      
+
+# Observation noise applied to the clean event stream to produce the observable store.
+noise:
+  exempt_types: [account.created]   # system-of-record events are never perturbed
+  drop_prob: 0.03                   # event never recorded
+  delay_prob: 0.10                  # event recorded late
+  delay_median_hours: 24            # lognormal recording delay
+  delay_sigma: 1.0                  # p95 delay ~ 5 days
+  jitter_minutes: 5                 # timestamp imprecision (uniform +/-)
+  duplicate_prob: 0.005             # same event ingested twice (identical row)

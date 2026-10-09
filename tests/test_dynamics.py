@@ -9,12 +9,7 @@ from engagement_intelligence.simulation.config import SimConfig
 from engagement_intelligence.simulation.dynamics import AccountDynamics, simulate_dynamics
 from engagement_intelligence.simulation.population import sample_population
 
-
-def _replace(model, path: str, value):
-    """Copy of a frozen config with the nested attribute at dotted `path` replaced."""
-    head, *rest = path.split(".")
-    new = value if not rest else _replace(getattr(model, head), ".".join(rest), value)
-    return model.model_copy(update={head: new})
+from helpers import replace_config as _replace
 
 
 def _stepper(cfg, archetype: str, n_days: int = 200, seed: int = 1) -> AccountDynamics:

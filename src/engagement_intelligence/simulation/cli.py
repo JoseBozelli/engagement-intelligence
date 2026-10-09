@@ -19,6 +19,7 @@ from engagement_intelligence.core.arrow_io import write_parquet
 from engagement_intelligence.simulation.config import SimConfig, load_sim_config
 from engagement_intelligence.simulation.events import simulate_world
 from engagement_intelligence.simulation.population import LATENT_PREFIX, sample_population
+from engagement_intelligence.simulation.noise import apply_noise
 
 
 def main(argv: list[str] | None = None) -> None:
@@ -38,6 +39,9 @@ def main(argv: list[str] | None = None) -> None:
     write_parquet(states, truth / "state_daily.parquet", metadata)
     write_parquet(episodes, truth / "disengagement_episodes.parquet", metadata)
     write_parquet(events, truth / "events_clean.parquet", metadata)
+    observable, noise_log = apply_noise(cfg, accounts, events)
+    write_parquet(noise_log, truth / "noise_log.parquet", metadata)
+    write_parquet(observable, args.out / "observable" / "events.parquet", metadata)
     manifest = {
         "config_fingerprint": cfg.fingerprint,
         "config_layers": args.config,
@@ -54,6 +58,8 @@ def main(argv: list[str] | None = None) -> None:
     _summarize_dynamics(cfg, archetype_of, state_labels, states, episodes)
     print()
     _summarize_events(cfg, archetype_of, state_labels, events)
+    print()
+    _summarize_noise(cfg, events, observable, noise_log)
 
 
 def _summarize_population(cfg: SimConfig, accounts: pa.Table) -> None:
@@ -128,6 +134,22 @@ def _summarize_events(cfg: SimConfig, archetype_of: dict, labels: np.ndarray, ev
             f"{pct(c[name, 'message.replied', 'account'], c[name, 'message.sent', 'operator']):7.1f}"
         )
 
+def _summarize_noise(cfg: SimConfig, clean: pa.Table, observable: pa.Table, log: pa.Table) -> None:
+    nz = cfg.noise
+    exempt = np.isin(np.array(clean.column("event_type").to_pylist()), list(nz.exempt_types))
+    dropped = np.array(log.column("dropped").to_pylist())
+    duplicated = np.array(log.column("duplicated").to_pylist())
+    observed = np.array(log.column("observed").to_pylist())
+    delay = log.column("delay_hours").to_numpy()
+    delayed = delay > 0
+
+    print(f"observable events: {observable.num_rows}   (clean: {clean.num_rows})")
+    print(f"dropped     {dropped[~exempt].mean():.4f}   (config {nz.drop_prob})")
+    print(f"delayed     {delayed[~exempt].mean():.4f}   (config {nz.delay_prob})   "
+          f"median {np.median(delay[delayed]):.1f} h   p95 {np.percentile(delay[delayed], 95):.1f} h   "
+          f"(config median {nz.delay_median_hours} h)")
+    print(f"duplicated  {duplicated[~exempt].mean():.4f}   (config {nz.duplicate_prob})")
+    print(f"recorded at/after horizon (not yet observable): {int((~dropped & ~observed).sum())}")
 
 if __name__ == "__main__":
     main()

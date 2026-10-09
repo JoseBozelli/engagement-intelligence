@@ -129,6 +129,15 @@ class EventsConfig(_Frozen):
     tasks: TaskConfig
     messages: MessageConfig
 
+class NoiseConfig(_Frozen):
+    exempt_types: tuple[str, ...] = ()
+    drop_prob: float = Field(ge=0, le=1)
+    delay_prob: float = Field(ge=0, le=1)
+    delay_median_hours: float = Field(gt=0)
+    delay_sigma: float = Field(ge=0)
+    jitter_minutes: float = Field(ge=0)
+    duplicate_prob: float = Field(ge=0, le=1)
+
 class SimConfig(_Frozen):
     seed: int = Field(ge=0)
     calendar: Calendar
@@ -137,6 +146,7 @@ class SimConfig(_Frozen):
     archetypes: dict[str, Archetype]
     dynamics: Dynamics
     events: EventsConfig
+    noise: NoiseConfig
 
     @model_validator(mode="after")
     def _consistency(self) -> SimConfig:
@@ -195,9 +205,14 @@ class SimConfig(_Frozen):
             if unknown:
                 raise ValueError(f"{where}: unknown references {sorted(unknown)}")
 
-        unknown_types = set(ev.messages.nudge_reset_by) - {str(t) for t in EventType}
-        if unknown_types:
-            raise ValueError(f"events.messages.nudge_reset_by: unknown event types {sorted(unknown_types)}")
+        known_types = {str(t) for t in EventType}
+        for where, types in {
+            "events.messages.nudge_reset_by": ev.messages.nudge_reset_by,
+            "noise.exempt_types": self.noise.exempt_types,
+        }.items():
+            unknown_types = set(types) - known_types
+            if unknown_types:
+                raise ValueError(f"{where}: unknown event types {sorted(unknown_types)}")
         return self
 
     @property

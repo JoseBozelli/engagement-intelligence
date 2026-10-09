@@ -119,7 +119,6 @@ dynamics:
   propensity:                   # engagement propensity E(t), identity link
     intercept: 0.0
     coefficients:
-      baseline_engagement: 0.6
       scheduling_friction: -0.2
       satisfaction: 0.5
       disrupted: -1.5

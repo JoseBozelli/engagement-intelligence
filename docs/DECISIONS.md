@@ -207,3 +207,15 @@ other deployments define their own.
 - Evidence: test_disengagement_parameters_do_not_perturb_other_processes.
 - Consequence: filtering or reordering accounts, or changing one process's parameters,
   cannot alter another account's or another process's trajectory.
+
+### D-021 Separate activity frequency from commitment in propensity [ACTIVE]
+- Question: why did sparse_stable disengage at ~50% (reference run, Step 3a)?
+- Hypothesis: baseline_engagement in E(t) treats infrequent activity as low commitment.
+- Experiment: hand calculation with configured coefficients reproduced the simulated rate
+  (~47% predicted vs 49.5% observed).
+- Result: mechanism confirmed; behavior contradicts the archetype's intent (sparse but stable).
+- Decision: remove baseline_engagement from the propensity predictor. It drives activity
+  frequency only (event generation); commitment comes from satisfaction, friction,
+  disruption, and persistence. No other parameter changed.
+- Consequence: sparse_stable becomes a low-activity, moderate-risk population, a deliberate
+  source of false warnings for observable-only models.

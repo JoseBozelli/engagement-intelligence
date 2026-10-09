@@ -473,3 +473,19 @@ other deployments define their own.
   validation-derived operating point applied unchanged, and observable slices. A repeat run
   requires --rerun-reason, and every run is kept in the record with its reason.
 - Consequence: "test touched once" is enforced by code; any rerun is visible in history.
+
+### D-042 Held-out evaluation outcome [LOCKED]
+- Result (test split, evaluated once, first run): selected model log loss 0.2438 vs recency
+  baseline 0.2815, paired difference -0.0377 [-0.0448, -0.0295]; PR-AUC 0.549 vs 0.466;
+  ROC-AUC 0.882 vs 0.825; precision / recall at 10% weekly capacity 0.584 / 0.498 vs
+  0.531 / 0.453. ECE 0.015 (below the 0.02 tolerance); calibration slope 1.043, intercept
+  -0.147.
+- Hypotheses: improvement over baseline (confirmed); stable discrimination (confirmed);
+  calibration drift direction (rejected: the model over-predicts by about 0.01-0.02 in every
+  week, concentrated in established accounts, consistent with covariate shift as the
+  population ages); fixed threshold flags more than the 10% capacity under drift (confirmed:
+  11.8% mean); early-lifecycle blind spot (confirmed: cold-start recall 0.28, tenure under
+  90 days PR-AUC 0.17).
+- Decision: no change to the model (the test set changes no decision). Recorded as
+  production guidance: monitor calibration-in-the-large and re-fit an intercept correction
+  on recent matured labels; band semantics under drift are resolved in the service design.

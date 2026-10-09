@@ -402,3 +402,25 @@ other deployments define their own.
   optimism applies equally to all XGBoost configurations and does not affect model
   selection, which uses validation. Final XGBoost fits use the mean best round count from
   CV, without early stopping.
+
+### D-037 Model development results and provisional selection [LOCKED]
+- Run 1 (initial grids) selected hyperparameters on grid boundaries (logistic C = 0.01, the
+  minimum; XGBoost max_depth = 5 and min_child_weight = 50, the maxima). Run 2 extended each
+  grid one step beyond the hit edges (C in {0.001, 0.003, 0.01, 0.1}; max_depth in {3, 5, 7}
+  x min_child_weight in {10, 50, 200}). The same hyperparameters won, now interior, and all
+  validation metrics were identical. Hypothesis (change < 0.001 log loss, selection
+  unchanged) confirmed; no further extensions (stop rule). xgboost[level_only] remains at
+  the lower grid corner; as an ablation that is equivalent in every comparison, it is not pursued.
+- Findings (validation, paired account-clustered bootstrap):
+  (1) every learned model beats the recency baseline (log loss -0.034 to -0.037; PR-AUC
+  0.43 -> 0.51-0.52; precision at 10% weekly capacity 0.49 -> 0.54-0.56);
+  (2) XGBoost is equivalent to logistic regression on every feature set;
+  (3) removing policy-dependent features is equivalent, so the selected model carries no
+  outreach-policy features and cannot create a policy feedback loop;
+  (4) trajectory features add a small, significant gain for the linear model and are
+  equivalent for XGBoost;
+  (5) on cold-start accounts, learned models have better log loss but lower PR-AUC than the
+  baseline (771 rows; train contains no cold-start accounts by construction); analyzed in
+  the error analysis.
+- Provisional selection: logistic[no_policy] (simplest candidate not significantly worse
+  than the best, xgboost[no_policy]; difference CI [-0.0017, 0.0071]).

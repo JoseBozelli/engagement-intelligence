@@ -23,10 +23,10 @@ cv_folds:   # scoring windows inside train; fit rows precede each window, purged
   - {score_start: 2025-03-03, score_end: 2025-05-05}
 candidates:
   logistic:
-    grid: {C: [0.01, 0.1, 1.0]}
+    grid: {C: [0.001, 0.003, 0.01, 0.1]}
     fixed: {max_iter: 2000}
   xgboost:
-    grid: {max_depth: [3, 5], min_child_weight: [10, 50]}
+    grid: {max_depth: [3, 5, 7], min_child_weight: [10, 50, 200]}
     fixed: {learning_rate: 0.05, subsample: 0.8, colsample_bytree: 0.8, n_estimators: 500,
             early_stopping_rounds: 30, tree_method: hist, n_jobs: 4}
 evaluation:

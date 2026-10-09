@@ -362,3 +362,16 @@ other deployments define their own.
   test_change_is_zero_without_recent_activity.
 - completion_rate_90d renamed completion_ratio_90d: completions can close requests issued
   before the window, so values above 1 are meaningful (backlog clearing); logic unchanged.
+
+## Step 7 implementation decisions
+
+### D-034 Point-in-time truncation audit [ACTIVE]
+- Decision: features/audit.py provides truncation_audit: for a cutoff, rebuild features for
+  every assessment at or before it from events recorded at or before it, and require exact
+  equality with the full-data build. Tests run it at three cutoffs, prove it non-vacuous
+  with an injected leaky feature, and add property tests: features change when recording
+  times change, labels do not influence features, row order and exact duplicates do not
+  influence features, and the output schema excludes label, split, and truth columns.
+- Consequence: leakage protection is verified by behavior, independent of implementation,
+  and covers feature kinds added later. The same function can gate training runs on real
+  data.

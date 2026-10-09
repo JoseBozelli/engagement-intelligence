@@ -219,3 +219,39 @@ other deployments define their own.
   disruption, and persistence. No other parameter changed.
 - Consequence: sparse_stable becomes a low-activity, moderate-risk population, a deliberate
   source of false warnings for observable-only models.
+
+## Step 3b implementation decisions
+
+### D-022 Event generation and operator policy [ACTIVE]
+- Decision: a per-account EventGenerator observes daily state via a generic observer hook
+  in simulate() and returns experience shocks (satisfaction only). One open booking at a
+  time; each booked session resolves to exactly one outcome (operator cancellation, account
+  cancellation, no-show, completed). Completed sessions may produce follow-ups linked by
+  related_ref_id. Tasks are issued periodically. Messages form sent -> opened -> replied
+  threads. Operator policy: reminders before sessions and nudges after observed silence with
+  a cooldown, computed only from the account's events whose time has passed. Every parameter
+  is configuration; predictor inputs are validated.
+- Alternatives: precomputed trajectories without feedback (loses realism); a policy driven
+  by latent state (leaks truth into observables).
+- Evidence: tests/test_events.py (lifecycle integrity, determinism, behavior, feedback).
+- Consequence: the operator policy is the seam where a later intervention layer plugs in.
+
+### D-023 Clean events are simulator truth [ACTIVE]
+- Decision: the noise-free stream is written to truth/events_clean.parquet. The observable
+  store is produced only by the observation-noise step.
+- Consequence: no model can train on, or be evaluated against, noise-free observations by
+  accident; noise is auditable against the clean stream.
+
+### D-024 Bulk event validation [ACTIVE]
+- Decision: EventVocabulary.check_table validates whole tables using the same rule logic as
+  validate() (no per-row objects). check_schema also enforces recorded_at >= timestamp.
+- Consequence: bulk producers and ingestion get full rule checks at Pydantic-free cost.
+
+### D-025 Business-facing parameters use business units [LOCKED]
+- Decision: every parameter a deployment is expected to tune (target horizon and
+  eligibility, feature windows, risk bands, thresholds, change-alert rules) is expressed
+  in business units (days, probabilities, counts, rates) with a stated operational meaning.
+  Simulator internals may use modeling units (logits) because they only generate test data.
+- Alternatives: convert simulator predictors to base probabilities and odds ratios now
+  (deferred: readability gain does not change any business-facing interface).
+- Consequence: integration requires configuring meanings, not reverse-engineering numbers.

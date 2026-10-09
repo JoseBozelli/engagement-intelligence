@@ -1,21 +1,21 @@
 """Daily latent dynamics per account (simulator truth).
 
-AccountDynamics is a stepper. The event generator drives it one day at a time
-and may feed back experience shocks (e.g., an operator cancellation lowering
-satisfaction). simulate_dynamics() is a shock-free driver used to validate the
-dynamics in isolation.
+AccountDynamics is a stepper. simulate() drives it day by day for every account
+and lets an optional observer (e.g., the event generator) see each day's state
+and return an experience shock applied the next day.
 
 Randomness comes from the account's own "dynamics" stream, pre-drawn with one
 column per process, so changing one process's parameters cannot change another
-process's trajectory.
+process's trajectory. Shocks affect satisfaction only.
 """
 
 from __future__ import annotations
 
 import math
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
-from datetime import timedelta
+from datetime import date, timedelta
+from typing import Protocol
 
 import numpy as np
 import pyarrow as pa
@@ -55,10 +55,10 @@ def sigmoid(x: float) -> float:
     return z / (1.0 + z)
 
 
-_Bound = tuple[float, tuple[tuple[str, float], ...]]
+BoundPredictor = tuple[float, tuple[tuple[str, float], ...]]
 
 
-def _bind(predictor: LinearPredictor, latents: Mapping[str, float]) -> _Bound:
+def bind_predictor(predictor: LinearPredictor, latents: Mapping[str, float]) -> BoundPredictor:
     """Fold static (latent) terms into a constant; keep time-varying terms by name."""
     constant = predictor.intercept + sum(
         c * latents[n] for n, c in predictor.coefficients.items() if n in latents
@@ -67,7 +67,7 @@ def _bind(predictor: LinearPredictor, latents: Mapping[str, float]) -> _Bound:
     return constant, dynamic
 
 
-def _evaluate(bound: _Bound, state: Mapping[str, float]) -> float:
+def evaluate_bound(bound: BoundPredictor, state: Mapping[str, float]) -> float:
     constant, dynamic = bound
     return constant + sum(c * state[n] for n, c in dynamic)
 
@@ -79,6 +79,12 @@ class DayState:
     dip: bool
     propensity: float
     disengaged: bool
+
+
+class DayObserver(Protocol):
+    def on_day(self, day: int, today: date, state: DayState) -> float:
+        """See one day's state; return a satisfaction shock applied on the next day."""
+        ...
 
 
 class AccountDynamics:
@@ -98,14 +104,14 @@ class AccountDynamics:
         self._noise_sd = dyn.satisfaction.noise_sd
         self._drift_per_day = arch.satisfaction_drift_per_year / 365.25
 
-        self._p_disruption_start = sigmoid(_bind(dyn.disruption.onset, latents)[0])
+        self._p_disruption_start = sigmoid(bind_predictor(dyn.disruption.onset, latents)[0])
         self._p_disruption_end = 1.0 / dyn.disruption.mean_duration_days
         self._p_dip_start = arch.dip_rate_per_year / 365.25
         self._p_dip_end = 1.0 / arch.dip_mean_duration_days
 
-        self._propensity = _bind(dyn.propensity, latents)
-        self._hazard = _bind(dyn.disengagement.hazard, latents)
-        self._recovery = _bind(dyn.disengagement.recovery, latents)
+        self._propensity = bind_predictor(dyn.propensity, latents)
+        self._hazard = bind_predictor(dyn.disengagement.hazard, latents)
+        self._recovery = bind_predictor(dyn.disengagement.recovery, latents)
 
         # Columns: 0 = disruption, 1 = dip, 2 = disengagement.
         self._u = rng.random((n_days, 3))
@@ -141,34 +147,16 @@ class AccountDynamics:
             self.dip = u[1] < self._p_dip_start
 
         state = {"satisfaction": self.satisfaction, "disrupted": float(self.disrupted)}
-        propensity = _evaluate(self._propensity, state)
+        propensity = evaluate_bound(self._propensity, state)
         state["propensity"] = propensity
 
         if self.disengaged:
-            self.disengaged = u[2] >= sigmoid(_evaluate(self._recovery, state))
+            self.disengaged = u[2] >= sigmoid(evaluate_bound(self._recovery, state))
         else:
-            self.disengaged = u[2] < sigmoid(_evaluate(self._hazard, state))
+            self.disengaged = u[2] < sigmoid(evaluate_bound(self._hazard, state))
 
         self._day += 1
         return DayState(self.satisfaction, self.disrupted, self.dip, propensity, self.disengaged)
-
-
-def _run(sim: AccountDynamics, n_days: int) -> dict[str, np.ndarray]:
-    out = {
-        "satisfaction": np.empty(n_days),
-        "disrupted": np.empty(n_days, dtype=bool),
-        "dip": np.empty(n_days, dtype=bool),
-        "propensity": np.empty(n_days),
-        "disengaged": np.empty(n_days, dtype=bool),
-    }
-    for d in range(n_days):
-        s = sim.step()
-        out["satisfaction"][d] = s.satisfaction
-        out["disrupted"][d] = s.disrupted
-        out["dip"][d] = s.dip
-        out["propensity"][d] = s.propensity
-        out["disengaged"][d] = s.disengaged
-    return out
 
 
 def _runs(flags: np.ndarray) -> list[tuple[int, int | None]]:
@@ -180,10 +168,15 @@ def _runs(flags: np.ndarray) -> list[tuple[int, int | None]]:
     return [(int(s), None if e == n else int(e)) for s, e in zip(starts, ends)]
 
 
-def simulate_dynamics(cfg: SimConfig, accounts: pa.Table) -> tuple[pa.Table, pa.Table]:
-    """Shock-free daily trajectories and disengagement episodes for every account."""
+def simulate(
+    cfg: SimConfig,
+    accounts: pa.Table,
+    observer_factory: Callable[[dict], DayObserver] | None = None,
+) -> tuple[pa.Table, pa.Table, list[DayObserver | None]]:
+    """Daily trajectories and disengagement episodes; optional per-account observers."""
     state_chunks: list[pa.Table] = []
     episode_rows: list[dict] = []
+    observers: list[DayObserver | None] = []
 
     for row in accounts.to_pylist():
         created = row["created_at"].date()
@@ -191,7 +184,24 @@ def simulate_dynamics(cfg: SimConfig, accounts: pa.Table) -> tuple[pa.Table, pa.
         latents = {n: row[LATENT_PREFIX + n] for n in cfg.latents}
         rng = rng_for(cfg.seed, "dynamics", row["account_index"])
         sim = AccountDynamics(cfg, row["archetype"], latents, rng, n_days)
-        arrays = _run(sim, n_days)
+        observer = observer_factory(row) if observer_factory else None
+
+        arrays = {
+            "satisfaction": np.empty(n_days),
+            "disrupted": np.empty(n_days, dtype=bool),
+            "dip": np.empty(n_days, dtype=bool),
+            "propensity": np.empty(n_days),
+            "disengaged": np.empty(n_days, dtype=bool),
+        }
+        shock = 0.0
+        for d in range(n_days):
+            s = sim.step(shock)
+            arrays["satisfaction"][d] = s.satisfaction
+            arrays["disrupted"][d] = s.disrupted
+            arrays["dip"][d] = s.dip
+            arrays["propensity"][d] = s.propensity
+            arrays["disengaged"][d] = s.disengaged
+            shock = observer.on_day(d, created + timedelta(days=d), s) if observer else 0.0
 
         state_chunks.append(
             pa.table(
@@ -212,9 +222,16 @@ def simulate_dynamics(cfg: SimConfig, accounts: pa.Table) -> tuple[pa.Table, pa.
                     "end": None if end is None else created + timedelta(days=end),
                 }
             )
+        observers.append(observer)
 
     states = pa.concat_tables(state_chunks)
     episodes = pa.Table.from_pylist(episode_rows, schema=EPISODE_SCHEMA)
     check_table(states, STATE_SCHEMA)
     check_table(episodes, EPISODE_SCHEMA)
+    return states, episodes, observers
+
+
+def simulate_dynamics(cfg: SimConfig, accounts: pa.Table) -> tuple[pa.Table, pa.Table]:
+    """Shock-free trajectories (dynamics validated in isolation)."""
+    states, episodes, _ = simulate(cfg, accounts)
     return states, episodes

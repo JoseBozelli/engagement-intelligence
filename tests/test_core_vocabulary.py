@@ -5,6 +5,7 @@ import pytest
 
 from engagement_intelligence.core.envelope import EventEnvelope
 from engagement_intelligence.core.vocabulary import EventVocabulary
+from engagement_intelligence.core.arrow_io import to_arrow
 
 T0 = datetime(2024, 1, 1, tzinfo=timezone.utc)
 
@@ -89,3 +90,8 @@ def test_vocabulary_is_immutable():
         TOY.name = "other"
     with pytest.raises(TypeError):
         TOY.allowed_actors["x.y"] = frozenset({"u"})
+
+def test_check_table_reports_offending_row():
+    table = to_arrow([env(), env(event_id="e2", actor="admin")])  # admin may not open things
+    with pytest.raises(ValueError, match="row 1"):
+        TOY.check_table(table)

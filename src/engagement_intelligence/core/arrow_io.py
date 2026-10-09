@@ -12,6 +12,7 @@ from pathlib import Path
 
 import pyarrow as pa
 import pyarrow.parquet as pq
+import pyarrow.compute as pc
 
 from engagement_intelligence.core.envelope import EventEnvelope
 
@@ -72,6 +73,8 @@ def check_table(table: pa.Table, schema: pa.Schema) -> None:
 
 def check_schema(table: pa.Table) -> None:
     check_table(table, EVENT_ARROW_SCHEMA)
+    if table.num_rows and pc.any(pc.less(table["recorded_at"], table["timestamp"])).as_py():
+        raise ValueError("recorded_at must be >= timestamp")
 
 def from_arrow(table: pa.Table, model: type[E] = EventEnvelope) -> list[E]:
     """Boundary validation: materialize every row through `model`."""

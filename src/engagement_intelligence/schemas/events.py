@@ -19,7 +19,7 @@ class EventType(StrEnum):
     ACCOUNT_CREATED = "account.created"
     SESSION_BOOKED = "session.booked"
     SESSION_COMPLETED = "session.completed"
-    SESSION_CANCELLED = "sesssion.cancelled"
+    SESSION_CANCELLED = "session.cancelled"
     SESSION_NO_SHOW = "session.no_show"
     FOLLOWUP_REQUIRED = "followup.required"
     FOLLOWUP_COMPLETED = "followup.completed"

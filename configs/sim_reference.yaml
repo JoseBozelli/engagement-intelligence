@@ -132,3 +132,83 @@ dynamics:
       intercept: -6.5
       coefficients:
         persistence: 0.6
+
+# Observable event generation. Predictors are logits per opportunity (stated per block). Inputs: declared latents
+# plus state varibles satisfaction, disrupted (0/1), dip (0/1), disengaged (0/1). The operator policy uses only
+# the account's past events.
+events:
+  activity_hours:
+    start: 8
+    end: 20
+  sessions:
+    booking:                    # logit, per day while no session is booked
+      intercept: -3.0
+      coefficients:
+        baseline_engagement: 0.6
+        satisfaction: 0.3
+        disrupted: -1.5
+        dip: -2.0
+        disengaged: -3.5
+    operator_booking_share: 0.2
+    lead_days_mean: 7
+    operator_cancel_prob: 0.03
+    cancel_notice_hours_max: 72
+    account_cancel:                     # logit, per booked session
+      intercept: -3.0
+      coefficients:
+        scheduling_friction: 0.6
+        satisfaction: -0.3
+        disrupted: 1.5
+        disengaged: 2.0
+    no_show:                            # logit, per session not cancelled
+      intercept: -3.2
+      coefficients:
+        scheduling_friction: 0.6
+        satisfaction: -0.3
+        disrupted: 1.2
+        disengaged: 2.5
+    completed_shock: 0.05
+    operator_cancel_shock: -0.3
+  followups:
+    required_prob: 0.3
+    request_delay_hours_mean: 12
+    completion:                         # logit, per follow-up
+      intercept: 0.5
+      coefficients:
+        persistence: 0.8
+        satisfaction: 0.3
+        disengaged: -3.0
+    delay_days_mean: 4
+  tasks:
+    interval_days: 60
+    completion:                         # logit, per task
+      intercept: 0.3
+      coefficients:
+        persistence: 0.8
+        responsiveness: 0.4
+        disengaged: -3.0
+    delay_days_mean: 6
+  messages:
+    reminder_days_before: 1
+    nudge_after_days: 21
+    nudge_cooldown_days: 14
+    nudge_reset_by:                     # account-initiated event types hat reset the nudge timer
+      - session.booked
+      - session.completed
+      - message.replied
+      - followup.completed
+      - task.completed
+    open:                               # logit, per message
+      intercept: 0.0
+      coefficients:
+        responsiveness: 0.8
+        disrupted: -0.5
+        disengaged: -1.5
+    reply:                              # logit, per opened message
+      intercept:  -1.0
+      coefficients:
+        responsiveness: 0.8
+        satisfaction: 0.3
+        disengaged: -2.5
+    open_delay_hours_mean: 6
+    reply_delay_hours_mean: 12      

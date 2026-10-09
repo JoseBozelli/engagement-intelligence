@@ -17,6 +17,7 @@ from engagement_intelligence.core.base_event import validate_correlation_ids
 
 if TYPE_CHECKING:
     from engagement_intelligence.core.envelope import EventEnvelope
+    import pyarrow as pa
 
 def _strs(values) -> frozenset[str]:
     return frozenset(str(v) for v in values)
@@ -51,21 +52,41 @@ class EventVocabulary:
     def event_types(self) -> frozenset[str]:
         return frozenset(self.allowed_actors)
 
-    def validate(self, event: EventEnvelope) -> None:
-        event_type, actor = str(event.event_type), str(event.actor)
+    def _check(self, *, account_id: str, event_type: str, actor: str,
+               ref_id: str | None, related_ref_id: str | None) -> None:
         if event_type not in self.allowed_actors:
             raise ValueError(f"unknown event_type {event_type!r} for vocabulary {self.name!r}")
         if actor not in self.allowed_actors[event_type]:
             raise ValueError(f"actor {actor!r} not allowed for event_type {event_type!r}")
         validate_correlation_ids(
-            account_id=event.account_id,
+            account_id=account_id,
             event_type=event_type,
-            ref_id=event.ref_id,
-            related_ref_id=event.related_ref_id,
+            ref_id=ref_id,
+            related_ref_id=related_ref_id,
             requires_ref_id=self.requires_ref_id,
             no_ref_id_types=self.no_ref_id_types,
             allows_related_ref_id=self.allows_related_ref_id
         )
+
+    def validate(self, event: EventEnvelope) -> None:
+        self._check(
+            account_id=event.account_id,
+            event_type=str(event.event_type),
+            actor=str(event.actor),
+            ref_id=event.ref_id,
+            related_ref_id=event.related_ref_id
+        )
+
+    def check_table(self, table: pa.Table) -> None:
+        """Validate every row of an event table without constructing objects (bulk boundary)."""
+        names = ("account_id", "event_type", "actor", "ref_id", "related_ref_id")
+        columns = [table.column(n).to_pylist() for n in names]
+        for i, (account_id, event_type, actor, ref_id, related) in enumerate(zip(*columns)):
+            try:
+                self._check(account_id=account_id, event_type=event_type, actor=actor,
+                            ref_id=ref_id, related_ref_id=related)
+            except ValueError as exc:
+                raise ValueError(f"row {i}: {exc}") from exc
 
     def to_dict(self) -> dict[str, Any]:
         return {

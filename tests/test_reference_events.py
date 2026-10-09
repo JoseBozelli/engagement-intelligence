@@ -6,7 +6,7 @@ import pytest
 from pydantic import ValidationError
 
 from engagement_intelligence.core import ids
-from engagement_intelligence.core.arrow_io import EVENT_ARROW_SCHEMA, from_arrow, to_arrow
+from engagement_intelligence.core.arrow_io import EVENT_ARROW_SCHEMA, from_arrow, to_arrow, check_schema
 from engagement_intelligence.schemas.events import (
     REFERENCE_VOCABULARY,
     SIGNALGUARD_COMPATIBLE_TYPES,
@@ -136,3 +136,18 @@ def test_nulls_in_required_columns_are_rejected():
     table = pa.Table.from_pylist(rows, schema=EVENT_ARROW_SCHEMA)   # pyarrow accepts this silently
     with pytest.raises(ValueError, match="tenant_id"):
         from_arrow(table, model=Event)
+
+def test_table_with_recorded_before_timestamp_rejected():
+    rows = to_arrow([make_event()]).to_pylist()
+    rows[0]["recorded_at"] = rows[0]["timestamp"] - timedelta(hours=1)
+    table = pa.Table.from_pylist(rows, schema=EVENT_ARROW_SCHEMA)
+    with pytest.raises(ValueError, match="recorded_at"):
+        check_schema(table)
+
+def test_reference_vocabulary_names_are_exact():
+    assert {str(t) for t in EventType} == {
+        "account.created", "session.booked", "session.completed", "session.cancelled",
+        "session.no_show", "followup.required", "followup.completed", "task.required",
+        "task.completed", "message.sent", "message.opened", "message.replied",
+    }
+    assert {str(a) for a in Actor} == {"account", "operator", "system"}

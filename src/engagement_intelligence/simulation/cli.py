@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import argparse
 import json
+from collections import Counter
 from pathlib import Path
 
 import numpy as np
@@ -16,7 +17,7 @@ import pyarrow as pa
 
 from engagement_intelligence.core.arrow_io import write_parquet
 from engagement_intelligence.simulation.config import SimConfig, load_sim_config
-from engagement_intelligence.simulation.dynamics import simulate_dynamics
+from engagement_intelligence.simulation.events import simulate_world
 from engagement_intelligence.simulation.population import LATENT_PREFIX, sample_population
 
 
@@ -29,13 +30,14 @@ def main(argv: list[str] | None = None) -> None:
 
     cfg = load_sim_config(*args.config)
     accounts = sample_population(cfg)
-    states, episodes = simulate_dynamics(cfg, accounts)
+    states, episodes, events = simulate_world(cfg, accounts)
 
     metadata = {"sim.config_fingerprint": cfg.fingerprint, "sim.seed": str(cfg.seed)}
     truth = args.out / "truth"
     write_parquet(accounts, truth / "accounts.parquet", metadata)
     write_parquet(states, truth / "state_daily.parquet", metadata)
     write_parquet(episodes, truth / "disengagement_episodes.parquet", metadata)
+    write_parquet(events, truth / "events_clean.parquet", metadata)
     manifest = {
         "config_fingerprint": cfg.fingerprint,
         "config_layers": args.config,
@@ -43,9 +45,15 @@ def main(argv: list[str] | None = None) -> None:
     }
     (args.out / "manifest.json").write_text(json.dumps(manifest, indent=2), encoding="utf-8")
 
+    archetype_of = dict(zip(accounts.column("account_id").to_pylist(),
+                            accounts.column("archetype").to_pylist()))
+    state_labels = np.array([archetype_of[a] for a in states.column("account_id").to_pylist()])
+
     _summarize_population(cfg, accounts)
     print()
-    _summarize_dynamics(cfg, accounts, states, episodes)
+    _summarize_dynamics(cfg, archetype_of, state_labels, states, episodes)
+    print()
+    _summarize_events(cfg, archetype_of, state_labels, events)
 
 
 def _summarize_population(cfg: SimConfig, accounts: pa.Table) -> None:
@@ -60,13 +68,10 @@ def _summarize_population(cfg: SimConfig, accounts: pa.Table) -> None:
         print(f"{name:<20} {mask.mean():5.3f}  " + "  ".join(f"{m:10.2f}" for m in means))
 
 
-def _summarize_dynamics(cfg: SimConfig, accounts: pa.Table, states: pa.Table, episodes: pa.Table) -> None:
-    archetype_of = dict(zip(accounts.column("account_id").to_pylist(),
-                            accounts.column("archetype").to_pylist()))
-    labels = np.array([archetype_of[a] for a in states.column("account_id").to_pylist()])
+def _summarize_dynamics(cfg: SimConfig, archetype_of: dict, labels: np.ndarray,
+                        states: pa.Table, episodes: pa.Table) -> None:
     disrupted = np.array(states.column("disrupted").to_pylist())
     dip = np.array(states.column("dip").to_pylist())
-
     ep_accounts = episodes.column("account_id").to_pylist()
     ep_ended = [e is not None for e in episodes.column("end").to_pylist()]
     ever = set(ep_accounts)
@@ -83,6 +88,44 @@ def _summarize_dynamics(cfg: SimConfig, accounts: pa.Table, states: pa.Table, ep
             f"{name:<20} {disrupted[mask].mean():9.3f} {dip[mask].mean():6.3f} "
             f"{np.mean([a in ever for a in members]):9.3f} "
             f"{np.mean([a in ongoing for a in members]):10.3f} {returned:9.3f}"
+        )
+
+
+def _summarize_events(cfg: SimConfig, archetype_of: dict, labels: np.ndarray, events: pa.Table) -> None:
+    exposure_days = Counter(labels.tolist())
+    engagement_types = set(cfg.events.messages.nudge_reset_by)
+    c: Counter = Counter()
+    for account, event_type, actor, attrs in zip(
+        events.column("account_id").to_pylist(),
+        events.column("event_type").to_pylist(),
+        events.column("actor").to_pylist(),
+        events.column("attributes_json").to_pylist(),
+    ):
+        arch = archetype_of[account]
+        c[arch, event_type, actor] += 1
+        if actor == "account" and event_type in engagement_types:
+            c[arch, "engagement"] += 1
+        if event_type == "message.sent" and json.loads(attrs).get("kind") == "nudge":
+            c[arch, "nudge"] += 1
+
+    def pct(n: int, d: int) -> float:
+        return 100.0 * n / d if d else float("nan")
+
+    print(f"clean events: {events.num_rows}")
+    print(f"{'archetype':<20} {'eng/yr':>7} {'sess/yr':>8} {'compl%':>7} {'noshow%':>8} "
+          f"{'cancel%':>8} {'nudge/yr':>9} {'reply%':>7}")
+    for name in cfg.archetypes:
+        years = exposure_days[name] / 365.25
+        booked = c[name, "session.booked", "account"] + c[name, "session.booked", "operator"]
+        completed = c[name, "session.completed", "account"]
+        no_show = c[name, "session.no_show", "account"]
+        acct_cancel = c[name, "session.cancelled", "account"]
+        resolved = completed + no_show + acct_cancel + c[name, "session.cancelled", "operator"]
+        print(
+            f"{name:<20} {c[name, 'engagement'] / years:7.1f} {booked / years:8.1f} "
+            f"{pct(completed, resolved):7.1f} {pct(no_show, resolved):8.1f} "
+            f"{pct(acct_cancel, resolved):8.1f} {c[name, 'nudge'] / years:9.1f} "
+            f"{pct(c[name, 'message.replied', 'account'], c[name, 'message.sent', 'operator']):7.1f}"
         )
 
 

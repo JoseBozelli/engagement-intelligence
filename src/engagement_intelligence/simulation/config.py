@@ -16,6 +16,7 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from engagement_intelligence.core import ids
 from engagement_intelligence.core.config import fingerprint, load_yaml_layers
+from engagement_intelligence.schemas.events import EventType
 
 _NAME_RE = re.compile(r"[a-z][a-z0-9_]{0,47}")
 
@@ -23,6 +24,7 @@ _NAME_RE = re.compile(r"[a-z][a-z0-9_]{0,47}")
 PROPENSITY_INPUTS = frozenset({"satisfaction", "disrupted"})
 DISENGAGEMENT_INPUTS = PROPENSITY_INPUTS | {"propensity"}
 RESERVED_NAMES = DISENGAGEMENT_INPUTS | {"dip", "disengaged"}
+EVENT_INPUTS = frozenset({"satisfaction", "disrupted", "dip", "disengaged"})
 
 class _Frozen(BaseModel):
     model_config = ConfigDict(frozen=True, extra="forbid")
@@ -78,6 +80,55 @@ class Dynamics(_Frozen):
     propensity: LinearPredictor
     disengagement: DisengagementProcess
 
+class ActivityHours(_Frozen):
+    start: float = Field(ge=0, lt=24)
+    end: float = Field(gt=0, le=24)
+
+    @model_validator(mode="after")
+    def _order(self) -> ActivityHours:
+        if self.end <= self.start:
+            raise ValueError("activity_hours.end must be after start")
+        return self
+
+class SessionConfig(_Frozen):
+    booking: LinearPredictor
+    operator_booking_share: float = Field(ge=0, le=1)
+    lead_days_mean: float = Field(ge=1)
+    operator_cancel_prob: float = Field(ge=0, le=1)
+    cancel_notice_hours_max: float = Field(gt=0)
+    account_cancel: LinearPredictor
+    no_show: LinearPredictor
+    completed_shock: float = 0.0
+    operator_cancel_shock: float = 0.0
+
+class FollowupConfig(_Frozen):
+    required_prob: float = Field(ge=0, le=1)
+    request_delay_hours_mean: float = Field(gt=0)
+    completion: LinearPredictor
+    delay_days_mean: float = Field(gt=0)
+
+class TaskConfig(_Frozen):
+    interval_days: int = Field(ge=1)
+    completion: LinearPredictor
+    delay_days_mean: float = Field(gt=0)
+
+class MessageConfig(_Frozen):
+    reminder_days_before: int = Field(ge=1)
+    nudge_after_days: int = Field(ge=1)
+    nudge_cooldown_days: int = Field(ge=1)
+    nudge_reset_by: tuple[str, ...]
+    open: LinearPredictor
+    reply: LinearPredictor
+    open_delay_hours_mean: float = Field(gt=0)
+    reply_delay_hours_mean: float = Field(gt=0)
+
+class EventsConfig(_Frozen):
+    activity_hours: ActivityHours
+    sessions: SessionConfig
+    followups: FollowupConfig
+    tasks: TaskConfig
+    messages: MessageConfig
+
 class SimConfig(_Frozen):
     seed: int = Field(ge=0)
     calendar: Calendar
@@ -85,6 +136,7 @@ class SimConfig(_Frozen):
     latents: tuple[str, ...]
     archetypes: dict[str, Archetype]
     dynamics: Dynamics
+    events: EventsConfig
 
     @model_validator(mode="after")
     def _consistency(self) -> SimConfig:
@@ -123,16 +175,29 @@ class SimConfig(_Frozen):
                 f"dynamics.satisfaction.anchor_latent {dyn.satisfaction.anchor_latent!r} "
                 "is not a declared latent"
             )
+        ev = self.events
+        event_inputs = declared | EVENT_INPUTS
         allowed = {
             "dynamics.propensity": (dyn.propensity, declared | PROPENSITY_INPUTS),
             "dynamics.disruption.onset": (dyn.disruption.onset, declared),
             "dynamics.disengagement.hazard": (dyn.disengagement.hazard, declared | DISENGAGEMENT_INPUTS),
-            "dynamics.disengagement.recovery": (dyn.disengagement.recovery, declared | DISENGAGEMENT_INPUTS)
+            "dynamics.disengagement.recovery": (dyn.disengagement.recovery, declared | DISENGAGEMENT_INPUTS),
+            "events.sessions.booking": (ev.sessions.booking, event_inputs),
+            "events.sessions.account_cancel": (ev.sessions.account_cancel, event_inputs),
+            "events.sessions.no_show": (ev.sessions.no_show, event_inputs),
+            "events.followups.completion": (ev.followups.completion, event_inputs),
+            "events.tasks.completion": (ev.tasks.completion, event_inputs),
+            "events.messages.open": (ev.messages.open, event_inputs),
+            "events.messages.reply": (ev.messages.reply, event_inputs)
         }
         for where, (predictor, names) in allowed.items():
             unknown = set(predictor.coefficients) - names
             if unknown:
                 raise ValueError(f"{where}: unknown references {sorted(unknown)}")
+
+        unknown_types = set(ev.messages.nudge_reset_by) - {str(t) for t in EventType}
+        if unknown_types:
+            raise ValueError(f"events.messages.nudge_reset_by: unknown event types {sorted(unknown_types)}")
         return self
 
     @property

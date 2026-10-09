@@ -1,0 +1,1 @@
+"""Point-in-time feature construction from a declarative spec. Vocabulary-agnostic."""

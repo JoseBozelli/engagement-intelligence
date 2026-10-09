@@ -12,6 +12,8 @@ from engagement_intelligence.simulation.diagnostics import RunArtifacts
 from engagement_intelligence.simulation.events import simulate_world
 from engagement_intelligence.simulation.noise import apply_noise
 from engagement_intelligence.simulation.population import sample_population, utc_midnight
+from engagement_intelligence.core.roles import load_roles
+from engagement_intelligence.features.spec import load_feature_spec
 
 CONFIG_DIR = Path(__file__).resolve().parents[1] / "configs"
 
@@ -28,8 +30,19 @@ def small_cfg():
     return load_sim_config(CONFIG_DIR / "sim_reference.yaml", CONFIG_DIR / "sim_small.yaml")
 
 @pytest.fixture(scope="session")
-def labeling_cfg():
-    return load_labeling_config(CONFIG_DIR / "labeling_reference.yaml", vocabulary=REFERENCE_VOCABULARY)
+def roles_cfg():
+    return load_roles(CONFIG_DIR / "roles_reference.yaml", vocabulary=REFERENCE_VOCABULARY)
+
+
+@pytest.fixture(scope="session")
+def labeling_cfg(roles_cfg):
+    return load_labeling_config(CONFIG_DIR / "labeling_reference.yaml",
+                                roles=roles_cfg, vocabulary=REFERENCE_VOCABULARY)
+
+
+@pytest.fixture(scope="session")
+def features_spec(roles_cfg):
+    return load_feature_spec(CONFIG_DIR / "features_reference.yaml", roles=roles_cfg)
 
 @pytest.fixture(scope="session")
 def small_pipeline(small_cfg, labeling_cfg):

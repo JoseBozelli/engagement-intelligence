@@ -325,4 +325,40 @@ other deployments define their own.
   prevalence; (3) calibration is evaluated per split because drift is expected;
   (4) error analysis covers archetype, cold-start, and account tenure.
 
-  
+## Step 6 implementation decisions (design approved 2026-10-09)
+
+### D-031 Roles are shared data for targets and features [LOCKED]
+- Decision: core/roles.py defines roles as named groups of (event_type, actor) selectors,
+  validated against the vocabulary. The target references a role (target.engagement_role);
+  inline engagement events are rejected. The resolved selectors are part of the labeling
+  fingerprint, so provenance reflects actual semantics.
+- Consequence: one definition of engagement for labels and features; a deployment maps its
+  vocabulary onto roles and reuses target and feature specs unchanged. Labels are
+  regenerated once because the labeling fingerprint changed (content unchanged).
+
+### D-032 Declarative point-in-time features [LOCKED; one deviation noted]
+- Decision: a FeatureSpec declares features of seven kinds (recency, overdue_ratio, count,
+  change, rate with prior smoothing, outstanding, tenure) in business units, each with a
+  description for driver explanations and a policy_dependent flag. Computation is exact
+  point-in-time: only events with recorded_at <= t are visible; windows apply to
+  occurrence time; per-account events x times matrices; exact deduplication first.
+  Output rows align one-to-one with the assessments table; metadata records spec, roles,
+  source, and labeling fingerprints plus the policy-dependent feature names.
+- Deviation from the approved design: the overdue ratio uses the mean interval over the
+  lookback (lookback / event count) instead of the median gap, for full vectorization and
+  a plain business reading. Median-gap variant deferred unless error analysis requires it.
+- Policy-dependent features (outreach counts, reply rates) are included and flagged; model
+  development compares models with and without them.
+
+### D-033 Feature review after first build [ACTIVE]
+- Overdue ratio: hypothesis "cadence-normalized silence >= raw recency" rejected
+  (univariate AUC 0.59–0.64 vs 0.82). The feature intentionally removes the activity-level
+  signal and measures deviation from the account's own rhythm; it is retained and judged
+  by ablation, not univariate AUC.
+- Change features: the pseudo-count was added equally to both windows, mapping zero
+  activity to log(long/short) (attendance_trend p95 = log 3) and reversing its direction.
+  Fixed: the pseudo-count applies to the long window and is scaled to the short window's
+  length; equal underlying rates, including zero, now yield 0. Covered by
+  test_change_is_zero_without_recent_activity.
+- completion_rate_90d renamed completion_ratio_90d: completions can close requests issued
+  before the window, so values above 1 are meaningful (backlog clearing); logic unchanged.

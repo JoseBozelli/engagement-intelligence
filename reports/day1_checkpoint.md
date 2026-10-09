@@ -3,7 +3,7 @@
 Synthetic data for methodology evaluation only; values are not estimates of any real population.
 
 - Simulation config fingerprint: `8918c959fdd5f9fa`
-- Labeling config fingerprint: `69138c1cc0235e38`
+- Labeling config fingerprint: `64cfdf882d3bef12`
 - Snapshot (as_of): 2026-07-01T00:00:00+00:00
 - Assessments: 102294 rows, 1982 accounts
 

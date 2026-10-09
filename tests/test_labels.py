@@ -4,6 +4,8 @@ from datetime import datetime, timedelta, timezone
 import pytest
 from pydantic import ValidationError
 
+from helpers import T0, ev
+
 from engagement_intelligence.core.arrow_io import to_arrow
 from engagement_intelligence.core.config import deep_merge
 from engagement_intelligence.labels.build import ASSESSMENT_SCHEMA, build_assessments
@@ -13,10 +15,10 @@ from engagement_intelligence.simulation.events import simulate_world
 from engagement_intelligence.simulation.noise import apply_noise
 from engagement_intelligence.simulation.population import sample_population, utc_midnight
 
-T0 = datetime(2024, 1, 1, tzinfo=timezone.utc)  # a Monday
 BASE = {
     "target": {
         "name": "test_target",
+        "engagement_role": "engagement",
         "engagement_events": [
             {"event_type": "session.completed", "actor": "account"},
             {"event_type": "message.replied", "actor": "account"},
@@ -34,22 +36,10 @@ BASE = {
         "cold_start_after": "train",
     },
 }
-_seq = itertools.count()
 
 
 def _cfg(**overlay) -> LabelingConfig:
     return LabelingConfig.model_validate(deep_merge(BASE, overlay))
-
-
-def ev(account: str, event_type: str, actor: str, day: float, recorded_day: float | None = None) -> Event:
-    n = next(_seq)
-    ts = T0 + timedelta(days=day, hours=12)
-    recorded = T0 + timedelta(days=day if recorded_day is None else recorded_day, hours=12)
-    return Event(
-        event_id=f"e{n}", tenant_id="demo", account_id=account, event_type=event_type, actor=actor,
-        timestamp=ts, recorded_at=recorded,
-        ref_id=None if event_type == "account.created" else f"r{n}",
-    )
 
 
 def _rows(events, cfg=None, as_of_day=400):
@@ -170,3 +160,18 @@ def test_target_validated_against_vocabulary():
     cfg = _cfg(target={"engagement_events": [{"event_type": "message.sent", "actor": "account"}]})
     with pytest.raises(ValueError, match="message.sent"):
         cfg.target.validate_against(REFERENCE_VOCABULARY)
+
+def test_engagement_is_resolved_from_roles(roles_cfg, tmp_path):
+    import yaml
+
+    from engagement_intelligence.labels.spec import load_labeling_config
+
+    target = {k: v for k, v in BASE["target"].items() if k != "engagement_events"}
+    path = tmp_path / "labeling.yaml"
+    path.write_text(yaml.safe_dump({"target": target, "splits": BASE["splits"]}), encoding="utf-8")
+    cfg = load_labeling_config(path, roles=roles_cfg)
+    assert {(s.event_type, s.actor) for s in cfg.target.engagement_events} == roles_cfg.selectors["engagement"]
+
+    path.write_text(yaml.safe_dump(BASE), encoding="utf-8")   # inline events are rejected
+    with pytest.raises(ValueError, match="engagement_role"):
+        load_labeling_config(path, roles=roles_cfg)

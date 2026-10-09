@@ -1,0 +1,29 @@
+# Reference roles: named groups of (event_type, actor) selectors.
+# Targets and features refer to roles, never to raw event types.
+engagement:
+  - {event_type: session.booked, actor: account}
+  - {event_type: session.completed, actor: account}
+  - {event_type: message.replied, actor: account}
+  - {event_type: followup.completed, actor: account}
+  - {event_type: task.completed, actor: account}
+attendance:
+  - {event_type: session.completed, actor: account}
+missed:
+  - {event_type: session.no_show, actor: account}
+account_cancel:
+  - {event_type: session.cancelled, actor: account}
+session_outcome:
+  - {event_type: session.completed, actor: account}
+  - {event_type: session.no_show, actor: account}
+  - {event_type: session.cancelled, actor: account}
+  - {event_type: session.cancelled, actor: operator}
+outreach:
+  - {event_type: message.sent, actor: operator}
+reply:
+  - {event_type: message.replied, actor: account}
+request:
+  - {event_type: followup.required, actor: operator}
+  - {event_type: task.required, actor: operator}
+completion:
+  - {event_type: followup.completed, actor: account}
+  - {event_type: task.completed, actor: account}

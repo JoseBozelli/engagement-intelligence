@@ -2,12 +2,7 @@
 # All values are illustrative defaults in business units (D-025); deployments define their own.
 target:
   name: lapse_60d
-  engagement_events:            # account-initiated activity that counts as engagement
-    - {event_type: session.booked, actor: account}
-    - {event_type: session.completed, actor: account}
-    - {event_type: message.replied, actor: account}
-    - {event_type: followup.completed, actor: account}
-    - {event_type: task.completed, actor: account}
+  engagement_role: engagement   # defined in configs/roles_reference.yaml
   horizon_days: 60              # lapse = no engagement in the next 60 days
   eligibility_window_days: 90   # assess accounts engaged in the previous 90 days (as known at assessment time)
   label_settlement_days: 14     # wait for late-recorded events before a label is final

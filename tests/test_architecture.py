@@ -40,3 +40,15 @@ def test_labels_do_not_depend_on_simulation():
         if mod.startswith("engagement_intelligence.simulation")
     ]
     assert offenders == []
+
+def test_features_do_not_depend_on_simulation():
+    import engagement_intelligence.features as features
+
+    features_dir = Path(features.__file__).parent
+    offenders = [
+        (p.name, mod)
+        for p in features_dir.glob("*.py")
+        for mod in _imports(p)
+        if mod.startswith("engagement_intelligence.simulation")
+    ]
+    assert offenders == []

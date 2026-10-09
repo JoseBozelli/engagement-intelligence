@@ -21,17 +21,20 @@ from engagement_intelligence.core.arrow_io import check_schema, read_parquet_met
 from engagement_intelligence.labels.build import build_assessments
 from engagement_intelligence.labels.spec import LabelingConfig, load_labeling_config
 from engagement_intelligence.schemas.events import REFERENCE_VOCABULARY
+from engagement_intelligence.core.roles import load_roles
 
 
 def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description="Build point-in-time assessments and labels.")
     parser.add_argument("--events", required=True, type=Path, help="observable events parquet")
     parser.add_argument("--config", action="append", required=True, help="labeling YAML layer(s)")
+    parser.add_argument("--roles", action="append", required=True, help="roles YAML layer(s)")
     parser.add_argument("--as-of", required=True, help="snapshot date (YYYY-MM-DD, 00:00 UTC)")
     parser.add_argument("--out", required=True, type=Path, help="output parquet path")
     args = parser.parse_args(argv)
 
-    cfg = load_labeling_config(*args.config, vocabulary=REFERENCE_VOCABULARY)
+    roles = load_roles(*args.roles, vocabulary=REFERENCE_VOCABULARY)
+    cfg = load_labeling_config(*args.config, roles=roles, vocabulary=REFERENCE_VOCABULARY)
     events = pq.read_table(args.events)
     check_schema(events)
     as_of = datetime.combine(date.fromisoformat(args.as_of), time(), tzinfo=timezone.utc)
@@ -42,6 +45,7 @@ def main(argv: list[str] | None = None) -> None:
         "labels.config_fingerprint": cfg.fingerprint,
         "labels.as_of": as_of.isoformat(),
         "labels.source_fingerprint": source.get("sim.config_fingerprint", ""),
+        "labels.roles_fingerprint": roles.fingerprint,
     }
     write_parquet(table, args.out, metadata)
     _summarize(cfg, table)

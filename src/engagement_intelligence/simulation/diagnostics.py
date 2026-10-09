@@ -29,6 +29,7 @@ from engagement_intelligence.labels.build import DAY_US, column_us, engagement_b
 from engagement_intelligence.labels.spec import LabelingConfig, load_labeling_config
 from engagement_intelligence.schemas.events import REFERENCE_VOCABULARY
 from engagement_intelligence.simulation.config import SimConfig
+from engagement_intelligence.core.roles import load_roles
 
 _EPOCH_ORDINAL = date(1970, 1, 1).toordinal()
 _OPEN_END = np.iinfo(np.int64).max
@@ -227,10 +228,12 @@ def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description="Day-1 checkpoint report (evaluation only).")
     parser.add_argument("--run", required=True, type=Path, help="simulation run directory")
     parser.add_argument("--labeling-config", action="append", required=True, help="labeling YAML layer(s)")
+    parser.add_argument("--roles", action="append", required=True, help="roles YAML layer(s)")
     parser.add_argument("--out", required=True, type=Path, help="markdown report path")
     args = parser.parse_args(argv)
 
-    labeling = load_labeling_config(*args.labeling_config, vocabulary=REFERENCE_VOCABULARY)
+    roles = load_roles(*args.roles, vocabulary=REFERENCE_VOCABULARY)
+    labeling = load_labeling_config(*args.labeling_config, roles=roles, vocabulary=REFERENCE_VOCABULARY)
     run = load_run(args.run, labeling)
     annotated = annotate(labeling, run.accounts, run.episodes, run.observable, run.assessments)
     report = render_report(run, labeling, annotated)

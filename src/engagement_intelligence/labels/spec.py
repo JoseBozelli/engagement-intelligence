@@ -13,7 +13,8 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from engagement_intelligence.core.config import fingerprint, load_yaml_layers
+from engagement_intelligence.core.config import deep_merge, fingerprint, load_yaml_layers
+from engagement_intelligence.core.roles import RoleMap
 from engagement_intelligence.core.vocabulary import EventVocabulary
 
 WEEKDAYS = ("monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday")
@@ -31,6 +32,7 @@ class EventSelector(_Frozen):
 
 class TargetSpec(_Frozen):
     name: str
+    engagement_role: str
     engagement_events: tuple[EventSelector, ...] = Field(min_length=1)
     horizon_days: int = Field(ge=1)
     eligibility_window_days: int = Field(ge=1)
@@ -86,8 +88,18 @@ class LabelingConfig(_Frozen):
         return fingerprint(self.model_dump(mode="json"))
 
 
-def load_labeling_config(*paths: str | Path, vocabulary: EventVocabulary | None = None) -> LabelingConfig:
-    cfg = LabelingConfig.model_validate(load_yaml_layers(*paths))
+def load_labeling_config(*paths: str | Path, roles: RoleMap,
+                         vocabulary: EventVocabulary | None = None) -> LabelingConfig:
+    """Load labeling config, resolving target.engagement_role into concrete selectors."""
+    raw = load_yaml_layers(*paths)
+    target = raw.get("target", {})
+    if "engagement_events" in target:
+        raise ValueError("define engagement through target.engagement_role, not inline events")
+    role = target.get("engagement_role")
+    if role not in roles.selectors:
+        raise ValueError(f"target.engagement_role {role!r} is not a defined role")
+    raw = deep_merge(raw, {"target": {"engagement_events": roles.to_dict()[role]}})
+    cfg = LabelingConfig.model_validate(raw)
     if vocabulary is not None:
         cfg.target.validate_against(vocabulary)
     return cfg

@@ -1,0 +1,56 @@
+# Reference feature specification. Windows, caps, and ages in days; rate priors as
+# (prior_rate, prior_weight in pseudo-observations). Business units (D-025).
+# policy_dependent: the feature reflects the operator's outreach policy and will shift
+# if that policy changes (D-032).
+name: engagement_reference_v1
+features:
+  # Recency (level)
+  - {name: days_since_engagement, kind: recency, role: engagement, cap_days: 365,
+     description: "Days since the last engagement event"}
+  - {name: days_since_attendance, kind: recency, role: attendance, cap_days: 365,
+     description: "Days since the last attended session"}
+  - {name: days_since_reply, kind: recency, role: reply, cap_days: 365,
+     description: "Days since the last message reply"}
+  # Cadence-relative silence
+  - {name: engagement_overdue_ratio, kind: overdue_ratio, role: engagement, lookback_days: 180, cap: 20,
+     description: "Current silence relative to the account's average engagement interval over 180 days"}
+  # Counts (level)
+  - {name: engagement_count_30d, kind: count, role: engagement, window_days: 30,
+     description: "Engagement events in the last 30 days"}
+  - {name: engagement_count_90d, kind: count, role: engagement, window_days: 90,
+     description: "Engagement events in the last 90 days"}
+  - {name: attendance_count_30d, kind: count, role: attendance, window_days: 30,
+     description: "Attended sessions in the last 30 days"}
+  - {name: attendance_count_90d, kind: count, role: attendance, window_days: 90,
+     description: "Attended sessions in the last 90 days"}
+  - {name: outreach_count_30d, kind: count, role: outreach, window_days: 30, policy_dependent: true,
+     description: "Operator messages received in the last 30 days"}
+  - {name: outreach_count_90d, kind: count, role: outreach, window_days: 90, policy_dependent: true,
+     description: "Operator messages received in the last 90 days"}
+  # Change (trajectory)
+  - {name: engagement_trend_30v90, kind: change, role: engagement, short_days: 30, long_days: 90,
+     description: "Recent engagement rate relative to the 90-day rate (log ratio)"}
+  - {name: attendance_trend_30v90, kind: change, role: attendance, short_days: 30, long_days: 90,
+     description: "Recent attendance rate relative to the 90-day rate (log ratio)"}
+  # Rates (behavior quality)
+  - {name: reply_rate_30d, kind: rate, numerator: reply, denominator: outreach, window_days: 30,
+     prior_rate: 0.2, prior_weight: 2, policy_dependent: true,
+     description: "Share of operator messages answered in the last 30 days"}
+  - {name: reply_rate_90d, kind: rate, numerator: reply, denominator: outreach, window_days: 90,
+     prior_rate: 0.2, prior_weight: 2, policy_dependent: true,
+     description: "Share of operator messages answered in the last 90 days"}
+  - {name: no_show_rate_90d, kind: rate, numerator: missed, denominator: session_outcome, window_days: 90,
+     prior_rate: 0.05, prior_weight: 2,
+     description: "Share of session outcomes that were no-shows in the last 90 days"}
+  - {name: cancel_rate_90d, kind: rate, numerator: account_cancel, denominator: session_outcome, window_days: 90,
+     prior_rate: 0.05, prior_weight: 2,
+     description: "Share of session outcomes cancelled by the account in the last 90 days"}
+  - {name: completion_ratio_90d, kind: rate, numerator: completion, denominator: request, window_days: 90,
+     prior_rate: 0.6, prior_weight: 2,
+     description: "Completed follow-ups and tasks relative to requests issued in the last 90 days; above 1 when clearing older requests"}
+  # Follow-through
+  - {name: outstanding_requests, kind: outstanding, open_role: request, close_role: completion, min_age_days: 7,
+     description: "Follow-ups and tasks open for more than 7 days"}
+  # Lifecycle
+  - {name: tenure_days, kind: tenure,
+     description: "Days since the account was first observed"}

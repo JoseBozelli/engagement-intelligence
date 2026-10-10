@@ -1,4 +1,5 @@
 from pathlib import Path
+from dataclasses import asdict
 
 import pytest
 import numpy as np
@@ -15,6 +16,11 @@ from engagement_intelligence.simulation.population import sample_population, utc
 from engagement_intelligence.core.roles import load_roles
 from engagement_intelligence.features.spec import load_feature_spec
 from engagement_intelligence.models.config import load_modeling_config
+from engagement_intelligence.features.build import build_features
+from engagement_intelligence.models.bundle import build_bundle
+from engagement_intelligence.models.data import load_dataset
+from engagement_intelligence.models.operating import OperatingConfig, derive_operating_point
+from engagement_intelligence.models.train import FittedCandidate, fit_final
 
 CONFIG_DIR = Path(__file__).resolve().parents[1] / "configs"
 
@@ -66,3 +72,27 @@ def small_pipeline(small_cfg, labeling_cfg):
 @pytest.fixture(scope="session")
 def modeling_cfg(features_spec):
     return load_modeling_config(CONFIG_DIR / "models_reference.yaml", spec=features_spec)
+
+@pytest.fixture(scope="session")
+def small_bundle(small_pipeline, roles_cfg, features_spec, labeling_cfg, modeling_cfg):
+    """A real bundle trained on the small run (logistic, no_policy), plus its feature table."""
+    features = build_features(features_spec, roles_cfg, small_pipeline.observable, small_pipeline.assessments)
+    ds = load_dataset(features, small_pipeline.assessments, features_spec.names)
+    names = modeling_cfg.feature_sets["no_policy"].resolve(features_spec)
+    estimator = fit_final("logistic", {"C": 0.01, "max_iter": 2000}, None,
+                          ds.subset(ds.split == modeling_cfg.splits.train), names,
+                          modeling_cfg.log1p_features, modeling_cfg.seed)
+    candidate = FittedCandidate("logistic[no_policy]", "logistic", "no_policy", names, {"C": 0.01}, None, [], estimator)
+    operating = OperatingConfig(review_capacity=0.1, watch_capacity=0.25, ece_tolerance=0.02,
+                                calibration_bins=10, tenure_feature="tenure_days", tenure_buckets_days=(90, 180, 365))
+    validation = ds.subset(ds.split == modeling_cfg.splits.validation)
+    point = {
+        "selected_model": candidate.name,
+        "calibration": {"method": "none", "slope": 1.0, "intercept": 0.0},
+        "operating_point": asdict(derive_operating_point(candidate.predict(validation), operating)),
+        "operating_config_fingerprint": operating.fingerprint,
+        "provenance": {"feature spec fingerprint": features_spec.fingerprint},
+        "validation_summary": {},
+    }
+    bundle = build_bundle(candidate, point, features_spec, roles_cfg, labeling_cfg, modeling_cfg, operating)
+    return bundle, features

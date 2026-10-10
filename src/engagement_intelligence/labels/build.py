@@ -43,6 +43,8 @@ def _us(value: datetime | date) -> int:
         return int(np.datetime64(naive, "us").astype(np.int64))
     return int(np.datetime64(value, "D").astype("datetime64[us]").astype(np.int64))
 
+to_us = _us  # public alias: microseconds since epoch (UTC) for an aware datetime or a date
+
 
 def column_us(table: pa.Table, name: str) -> np.ndarray:
     """A timestamp column as int64 microseconds since epoch (UTC)."""

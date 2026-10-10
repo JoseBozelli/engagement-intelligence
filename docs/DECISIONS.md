@@ -489,3 +489,34 @@ other deployments define their own.
 - Decision: no change to the model (the test set changes no decision). Recorded as
   production guidance: monitor calibration-in-the-large and re-fit an intercept correction
   on recent matured labels; band semantics under drift are resolved in the service design.
+
+## Step 11 design and implementation decisions (approved 2026-10-09)
+
+### D-043 Assessment contract and scoring engine [LOCKED; one deviation noted]
+- Decision: EngagementAssessment (account_id, tenant_id, assessed_at, status, horizon_days,
+  risk_score, risk_band, risk_change, within_review_capacity, top_drivers, model_version);
+  additions beyond the brief's minimum are justified by envelope consistency, explicit
+  non-eligibility, and the meaning of the score. risk_change = band transition (new,
+  unchanged, escalated, de-escalated) and score delta against the stored previous scored
+  assessment; no case semantics. Bands use the bundle's fixed thresholds (stable risk meaning);
+  within_review_capacity is the top review-capacity share of each batch (None for
+  single-account calls). Drivers are exact linear log-odds contributions (top 3,
+  risk-increasing) behind an explainer protocol; non-linear bundles raise rather than
+  approximate. Scorer is batch-first and built only from the bundle plus injected EventSource
+  (enforces recorded_at <= as_of) and AssessmentStore protocols; it never imports the
+  simulator.
+- Deviation: the store is an append-only JSON Lines log instead of Parquet (Parquet cannot
+  append without rewriting); the protocol is unchanged.
+- Evidence: tests/test_scoring.py, including eligibility equal to the labeling rule and live
+  scores equal to bundle predictions on precomputed feature rows; the backfill command
+  repeats the check on the reference run.
+
+### D-044 Backfill findings for downstream consumers [ACTIVE]
+- Observation (reference run, 31 weekly batches): live scores reproduce bundle predictions on
+  all 31,715 precomputed test rows (max difference 5.6e-17). The HIGH share under fixed
+  thresholds drifts from 0.112 to 0.148; the capacity flag stays at exactly 10% per batch.
+  About 14% of scored accounts change band each week, roughly balanced between escalation
+  and de-escalation, mostly near thresholds.
+- Decision: no change to the risk layer. Raw transitions are recorded as a noisy action
+  trigger; persistence or hysteresis rules belong to the downstream decision layer, which
+  must not treat a single-week transition as a case-opening event by default.

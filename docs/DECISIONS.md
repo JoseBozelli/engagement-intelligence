@@ -520,3 +520,21 @@ other deployments define their own.
 - Decision: no change to the risk layer. Raw transitions are recorded as a noisy action
   trigger; persistence or hysteresis rules belong to the downstream decision layer, which
   must not treat a single-week transition as a case-opening event by default.
+
+## Step 12 implementation decisions
+
+### D-045 HTTP service and per-request observability [ACTIVE]
+- Decision: FastAPI application factory (create_app) builds the bundle, Scorer, assessment
+  store, and tracer once and closes over them; no module-level state. Endpoints: POST /assess
+  (batch, persists unless persist=false, computes the batch capacity flag), GET
+  /accounts/{id}/assessment (side-effect free; risk_change still reported), GET
+  /accounts/{id}/events, GET /accounts/{id}/risk-history, GET /health, GET /model-info.
+  Errors: unknown account 404; timezone-naive as_of 422. Every request writes one trace line
+  (request id also returned as X-Request-ID; route template; path and query arguments;
+  model version; status; latency; error type; batch records, scored, band shares, capacity
+  count). SignalGuard's JSONLTracer is copied verbatim into core/tracing.py and made
+  thread-safe by composition (LockedTracer); scoring that persists is serialized with a lock
+  because the demo JSONL store is not concurrency-safe.
+- Consequence: SignalGuard debts addressed in this service: module-level cache (factory),
+  cumulative accounting and coarse trace arguments (per-request records). Settings load from
+  EI_* environment variables for uvicorn's --factory mode.

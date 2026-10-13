@@ -64,3 +64,15 @@ def test_scoring_does_not_depend_on_simulation():
         if mod.startswith("engagement_intelligence.simulation")
     ]
     assert offenders == []
+
+def test_service_does_not_depend_on_simulation():
+    import engagement_intelligence.service as service
+
+    service_dir = Path(service.__file__).parent
+    offenders = [
+        (p.name, mod)
+        for p in service_dir.glob("*.py")
+        for mod in _imports(p)
+        if mod.startswith("engagement_intelligence.simulation")
+    ]
+    assert offenders == []

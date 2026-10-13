@@ -1,0 +1,1 @@
+"""Projections of the observable event store onto other systems' record formats."""

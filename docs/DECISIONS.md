@@ -552,3 +552,16 @@ other deployments define their own.
   they do not explain the band. The UI never persists assessments.
 - Consequence: the demo exercises the same boundary a downstream consumer will use; the
   service boundary, not in-process imports, is what the UI depends on.
+
+## Step 14 implementation decisions
+
+### D-047 SignalGuard projection adapter [ACTIVE]
+- Decision: interop/signalguard.py projects the observable store onto SignalGuard's in-memory
+  record shape (Event.to_dict(): account_id, timestamp, ref_id, related_ref_id, event_id,
+  event_type): exact deduplication, optional recorded-by cutoff, filter to the eight shared
+  types, six fields kept; JSONL writer and CLI for use outside Python. Timestamps carry a UTC
+  offset; consumers mixing projected records with timezone-naive data must normalize.
+- Evidence: tests/test_interop.py verifies field shape, type filtering, cutoff behavior, and
+  conformance with SignalGuard's ref-id rules using its own validate_correlation_ids.
+- Deferred: using the noise log as an answer key for detection evaluation (dropped or delayed
+  events produce prerequisite and ordering violations).

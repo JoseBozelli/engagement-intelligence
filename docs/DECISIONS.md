@@ -538,3 +538,17 @@ other deployments define their own.
 - Consequence: SignalGuard debts addressed in this service: module-level cache (factory),
   cumulative accounting and coarse trace arguments (per-request records). Settings load from
   EI_* environment variables for uvicorn's --factory mode.
+
+## Step 13 implementation decisions
+
+### D-046 Typed client and demo UI [ACTIVE]
+- Decision: client.py wraps the HTTP service and returns the service's own Pydantic
+  contracts; it maps 404 to UnknownAccountError and defaults to read-only (persist=False).
+  It is the reference shape for downstream agent tools. The Streamlit demo is a pure client
+  of the service: it shows a cohort view (band shares, review queue), an account view
+  (current assessment, risk change, factors raising risk, stored risk trajectory with band
+  thresholds, recent events known at the assessment date), and model information. Drivers are
+  labeled "factors raising risk relative to a typical account", because for low-risk accounts
+  they do not explain the band. The UI never persists assessments.
+- Consequence: the demo exercises the same boundary a downstream consumer will use; the
+  service boundary, not in-process imports, is what the UI depends on.

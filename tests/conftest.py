@@ -3,7 +3,11 @@ from dataclasses import asdict
 
 import pytest
 import numpy as np
+import pyarrow.parquet as pq
+from fastapi.testclient import TestClient
 
+from engagement_intelligence.service.app import create_app
+from engagement_intelligence.service.settings import ServiceSettings
 from engagement_intelligence.core.config import load_yaml_layers
 from engagement_intelligence.simulation.config import load_sim_config
 from engagement_intelligence.labels.spec import load_labeling_config
@@ -96,3 +100,16 @@ def small_bundle(small_pipeline, roles_cfg, features_spec, labeling_cfg, modelin
     }
     bundle = build_bundle(candidate, point, features_spec, roles_cfg, labeling_cfg, modeling_cfg, operating)
     return bundle, features
+
+@pytest.fixture
+def service_client(tmp_path, small_bundle, small_pipeline):
+    """In-process HTTP client for a service built from the small bundle and small run."""
+    from datetime import datetime, timezone
+
+    bundle, _ = small_bundle
+    events = tmp_path / "events.parquet"
+    pq.write_table(small_pipeline.observable, events)
+    settings = ServiceSettings(bundle_dir=bundle.save(tmp_path / "bundle"), events_path=events,
+                               store_path=tmp_path / "store.jsonl", trace_path=tmp_path / "trace.jsonl",
+                               default_as_of=datetime(2025, 12, 1, tzinfo=timezone.utc))
+    return TestClient(create_app(settings))
